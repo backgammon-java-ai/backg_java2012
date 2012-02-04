@@ -350,7 +350,7 @@ public class Board {
             } else {
                 // if you can bear off with both, use smaller dice
                 if (((potDest1==WHITE_BEAR_OFF_LOC)||(potDest1==BLACK_BEAR_OFF_LOC)) && ((potDest1==WHITE_BEAR_OFF_LOC)||(potDest1==BLACK_BEAR_OFF_LOC))) {
-                    if (myDice.getDice1() > myDice.getDice2()) {
+                    if (myDice.getDie(1) > myDice.getDie(2)) {
                         myDice.setUsedDie( 2,true );
                     } else {
                         myDice.setUsedDie( 1,true );
@@ -389,11 +389,11 @@ public class Board {
         int escape2;
 
         if (playerColor==white) {
-            escape1 = myDice.getDice1();
-            escape2 = myDice.getDice2();
+            escape1 = myDice.getDie(1);
+            escape2 = myDice.getDie(2);
         } else {
-            escape1 = 25 - myDice.getDice1();
-            escape2 = 25 - myDice.getDice2();
+            escape1 = 25 - myDice.getDie(1);
+            escape2 = 25 - myDice.getDie(2);
         }
 
         // Can they escape?
@@ -1354,16 +1354,6 @@ public class Board {
         }
     } // howManyOnBar
     
-
-    /**
-     * Perhaps this is unnecessary: just directly talk to myDice?
-     * Be aware that myDice does NOT have a two value setter: have toPoint
-     * Use 2 setter calls like below.
-     */
-    public void setDice(int roll1, int roll2) {
-        myDice.setDie(1,roll1);
-        myDice.setDie(2,roll2);
-    } // setDice
     
     
     /**
@@ -1379,9 +1369,9 @@ public class Board {
         // The player cannot move the other's blots
         if ((getColorOnPoint(pointNum)==playerColor) && (!myGame.status.point_selected)) {
             // Get the possible destinations when starting from that point
-               potDest1 = endPointMovingFrom(pointNum, myDice.getDice1( ), playerColor, this);
-               potDest2 = endPointMovingFrom(pointNum, myDice.getDice2( ), playerColor, this);
-//             if (playerColor==white) { potDest1 = pointNum + getDice1(); potDest2 = pointNum + getDice2();
+               potDest1 = endPointMovingFrom(pointNum, myDice.getDie(1 ), playerColor, this);
+               potDest2 = endPointMovingFrom(pointNum, myDice.getDie(2 ), playerColor, this);
+//             if (playerColor==white) { potDest1 = pointNum + getDie(1); potDest2 = pointNum + getDie(2);
 //                 // If the player can make no other moves, allow him
 //                 // to bear off with rolls larger than what is needed to bear off
 //                 if (needsInexactRolls(playerColor) ) {
@@ -1393,7 +1383,7 @@ public class Board {
 //                     }
 //                 }
 //             } else if (playerColor==black) {
-//                 potDest1 = pointNum - getDice1(); potDest2 = pointNum - getDice2();
+//                 potDest1 = pointNum - getDie(1); potDest2 = pointNum - getDie(2);
 //                 // If the player can make no other moves, allow him
 //                 // to bear off with rolls larger than what is needed to bear off
 //                 if (needsInexactRolls(playerColor)) {
@@ -1489,7 +1479,7 @@ public class Board {
         for (int myPoint : myPoints.myList ) {
             bunchOfPartialMoves.addAll( legalPartialMovesFromPoint(myPoint, playerColor) );
         }
-        System.out.println("in board.allLegalPartialMoves( ), the bunchOfPartialMoves==" + bunchOfPartialMoves.toString( ));
+        System.out.println("in board.allLegalPartialMoves( ), the bunchOfPartialMoves=='" + bunchOfPartialMoves.toString( ) + "'");
         return bunchOfPartialMoves;
     } /* allLegalPartialMoves( ) */
     
@@ -1506,8 +1496,8 @@ public class Board {
         /* Since this is worried about "Partial" (one-step) moves, dice doubles aren't an issue. There's no potDest3,4. */
         int endPointA = potDest1; // better check not zero!
         int endPointB = potDest2;
-        int dice1 = myDice.getDice1();
-        int dice2 = myDice.getDice2();
+        int dice1 = myDice.getDie(1);
+        int dice2 = myDice.getDie(2);
         
         ArrayList<PartialMove> bunchOfPartialMoves = new ArrayList<PartialMove>( );   /* for storing & returning a collection of "PartialMove"s */
         if (! myDice.getUsedDie(1 ) ) {
@@ -1523,6 +1513,7 @@ public class Board {
             PartialMove fakePartialMove2 = new PartialMove( myPoint, dice2, endPoint2, myGame, playerColor,/*whichDie:*/2 );           
             bunchOfPartialMoves.add(fakePartialMove2);
         }
+        System.out.println("in legalPartialMovesFromPoint(" + myPoint + "..), the bunchOfPartials=='" + bunchOfPartialMoves.toString( ) + "'");
         return bunchOfPartialMoves;
     } /* legalPartialMovesFromPoint( ) */
     
@@ -1785,10 +1776,10 @@ public class Board {
         for (int point = 1; point <= howManyPoints; point++) {
             // Only check points which contain the player's blots
             if (getColorOnPoint(point) == playerColor ) {
-                move1 = endPointMovingFrom(point, myDice.getDice1( ), playerColor, this); // might return BLACK_PAST_BEAR_OFF_LOC
-                move2 = endPointMovingFrom(point, myDice.getDice2( ), playerColor, this);
-                    //if (playerColor==white) { move1 = point + getDice1(); move2 = point + getDice2();
-                    //} else { move1 = point - getDice1(); move2 = point - getDice2(); }
+                move1 = endPointMovingFrom(point, myDice.getDie(1 ), playerColor, this); // might return BLACK_PAST_BEAR_OFF_LOC
+                move2 = endPointMovingFrom(point, myDice.getDie(2 ), playerColor, this);
+                    //if (playerColor==white) { move1 = point + getDie(1); move2 = point + getDie(2);
+                    //} else { move1 = point - getDie(1); move2 = point - getDie(2); }
                 if ( (canLandOn(move1, playerColor) && !myDice.getUsedDie( 1)) || (canLandOn(move2, playerColor) && !myDice.getUsedDie(2 ))) {
                     return true;
                 }
@@ -1822,8 +1813,8 @@ public class Board {
      * Watch out for either of them calling this canMoveExact() or does its equivalent?? looping through all points.
      *
      * This used to have simple overflow/underflow move math:
-     *  if (playerColor==white) { move1 = point + getDice1(); move2 = point + getDice2();
-     *  } else { move1 = point - getDice1(); move2 = point - getDice2(); }
+     *  if (playerColor==white) { move1 = point + getDie(1); move2 = point + getDie(2);
+     *  } else { move1 = point - getDie(1); move2 = point - getDie(2); }
      */ 
     public boolean canMoveExact( int playerColor) {
         if (! legitPlayerColor(playerColor)) {
@@ -1838,8 +1829,8 @@ public class Board {
         for (int point = 1; point <= howManyPoints; point++) {
             // Only check points which contain the player's blots
             if (getColorOnPoint(point) == playerColor ) {
-                move1 = endPointMovingFrom(point, myDice.getDice1( ), playerColor, this); // might return BLACK_PAST_BEAR_OFF_LOC
-                move2 = endPointMovingFrom(point, myDice.getDice2( ), playerColor, this);
+                move1 = endPointMovingFrom(point, myDice.getDie(1 ), playerColor, this); // might return BLACK_PAST_BEAR_OFF_LOC
+                move2 = endPointMovingFrom(point, myDice.getDie(2 ), playerColor, this);
                 if ( (canLandOnExact(move1, playerColor) && !myDice.getUsedDie( 1)) || (canLandOnExact(move2, playerColor) && !myDice.getUsedDie(2 ))) {
                     return true;
                 }
@@ -1878,8 +1869,8 @@ public class Board {
             //}
         }
         int move1, move2;
-        int dice1 = myDice.getDice1();
-        int dice2 = myDice.getDice2();
+        int dice1 = myDice.getDie(1);
+        int dice2 = myDice.getDie(2);
         // Cycle through all the points
         for (int point = 1; point <=howManyPoints; point++) {
             // Only check points which contain the player's blots
@@ -1918,7 +1909,7 @@ public class Board {
             throw new IllegalArgumentException("bad color '" + playerColor + "'");
         }
 
-        if (myDice.getDice1() == myDice.getDice2()) { /* doubles! */
+        if (myDice.getDie(1) == myDice.getDie(2)) { /* doubles! */
             return (/*myBoard.*/getBar( playerColor ) > 3);
         } else {
             return (/*myBoard.*/getBar( playerColor ) > 1);

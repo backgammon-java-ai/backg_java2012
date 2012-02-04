@@ -116,7 +116,7 @@ public class GameTest
         g1.doRoll();
         Board b1 = g1.getMyBoard();
         assertNotNull(b1);
-        b1.setDice(3, 6);
+        b1.myDice.roll(3, 6);
         g1.setCurrentPlayer(Board.black);
         LocList ll1 = b1.allMoveableBlotLocs(Board.black);
         assertNotNull(ll1);

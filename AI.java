@@ -38,7 +38,7 @@ public class AI
         ArrayList<PartialMove> myMoves = myGame.myBoard.allLegalPartialMoves( myColor/* , myGame*/);
 //      ArrayList<Move> myMoves = myGame.myBoard.allLegalMoves( myColor/* , myGame*/);
         /* might not have any moves! */
-        System.out.println(myMoves);
+        //System.out.println(myMoves);
         
         PartialMove gonnaMove = bestPartialMoveOf( myMoves ); /* might be null */
         /* Move gonnaMove = bestMoveOf( myMoves ); /* might be null */

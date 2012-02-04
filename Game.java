@@ -139,7 +139,8 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         if (status.networked) {
             comm = new Communication((CommunicationAdapter)this);
             comm.listen();
-            setSize(myBoardPict.BOARD_WIDTH + GUI_WIDTH/*632*/, myBoardPict.BOARD_HEIGHT + BOARD_PADDING + MESSAGE_HEIGHT /*560*/);
+            setSize(myBoardPict.BOARD_WIDTH + GUI_WIDTH/*632*/
+               , myBoardPict.BOARD_HEIGHT + BOARD_PADDING + MESSAGE_HEIGHT /*560*/);
             // Set up the window for messaging
             getRootPane().setDefaultButton(FButton[btn_SendMessage]);
             msg_input = new JTextField();
@@ -308,10 +309,10 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
      * Roll the dice for the current player
      */
     public void doRoll() {
-        myBoard.myDice.roll(); /* sets a doublet countdown (4 or 2) and has method isDoubles( ) which knows the truth */
+        myBoard.myDice.roll(); /* sets a doublet countdown (4 or 2), has method isDoubles( ) which knows the truth */
         
         if (status.networked) {
-            comm.sendroll(myBoard.myDice.getDice1(), myBoard.myDice.getDice2());
+            comm.sendroll(myBoard.myDice.getDie(1), myBoard.myDice.getDie(2));
         }
 
         // Turn off roll dice button
@@ -580,7 +581,8 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
      * Which says what to do if we could not connect to an ip
      */
     public void connectionRefused() {
-        JOptionPane.showMessageDialog(this, "Connection refused.\n\nMake sure the computer name/IP is correct\nand that the destination is running Game in networked mode.");
+        JOptionPane.showMessageDialog(this, "Connection refused.\n\nMake sure the computer name/IP is correct\n" 
+           + "and that the destination is running Game in networked mode.");
         status.clicker = false;
         FButton[btn_Connect].setEnabled(true);
     } // connectionRefused( )
@@ -674,16 +676,19 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         } else {
             int oldPosForBlack = (Board.howManyPoints + 1) - oldpos;
             int newPosForBlack = (Board.howManyPoints + 1) - newpos;
-            if ( (1<=oldPosForBlack) && (oldPosForBlack<=Board.howManyPoints) && (1<=newPosForBlack) && (newPosForBlack<=Board.howManyPoints) ) {
+            if ( (1<=oldPosForBlack) && (oldPosForBlack<=Board.howManyPoints) 
+                && (1<=newPosForBlack) && (newPosForBlack<=Board.howManyPoints) ) {
                 myBoard.moveBlot(playerColor /* black*/, oldPosForBlack, newPosForBlack);
                 repaint();
             } else if (newpos == Board.BLACK_BEAR_OFF_LOC /* was 26*/) {
                 myBoard.black_bear++;
-                myBoard.setPoint(/*pointNum:*/newPosForBlack, /*howMany:*/myBoard.getHowManyBlotsOnPoint(newPosForBlack) - 1, black);
+                myBoard.setPoint(/*pointNum:*/newPosForBlack
+                    , /*howMany:*/myBoard.getHowManyBlotsOnPoint(newPosForBlack) - 1, black);
                 repaint();
             } else if (oldpos == Board.BLACK_BAR_LOC /*was -1*/) {
                 myBoard.black_bar--;
-                myBoard.setPoint(/*pointNum:*/newPosForBlack, /*howMany:*/myBoard.getHowManyBlotsOnPoint(newPosForBlack) + 1, black);
+                myBoard.setPoint(/*pointNum:*/newPosForBlack
+                    , /*howMany:*/myBoard.getHowManyBlotsOnPoint(newPosForBlack) + 1, black);
                 repaint();
             }
         }
@@ -803,12 +808,12 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
 
         if (myBoard.myDice.getRolled()) {
             if (current_player==white) {
-                drawDice(myBoard.myDice.getDice1(), 479, 200, Color.WHITE, Color.BLACK);
-                drawDice(myBoard.myDice.getDice2(), 529, 200, Color.WHITE, Color.BLACK);
+                drawDice(myBoard.myDice.getDie(1), 479, 200, Color.WHITE, Color.BLACK);
+                drawDice(myBoard.myDice.getDie(2), 529, 200, Color.WHITE, Color.BLACK);
             }
             else {
-                drawDice(myBoard.myDice.getDice1(), 479, 200, myBoardPict.clr_black, Color.WHITE);
-                drawDice(myBoard.myDice.getDice2(), 529, 200, myBoardPict.clr_black, Color.WHITE);
+                drawDice(myBoard.myDice.getDie(1), 479, 200, myBoardPict.clr_black, Color.WHITE);
+                drawDice(myBoard.myDice.getDie(2), 529, 200, myBoardPict.clr_black, Color.WHITE);
             }
         }
 
@@ -1140,7 +1145,8 @@ final static int DOT_SIZE = 4;
                     }
                     g_buffer.fill(new Ellipse2D.Double(findX(point), findY(point) + i*30, 29, 29));
                 }
-                putString(String.valueOf(myBoard.getHowManyBlotsOnPoint(point)), /*X:*/findX(point)+10, /*Y:*/235, Color.RED, /*fontsize:*/15);
+                putString(String.valueOf(myBoard.getHowManyBlotsOnPoint(point))
+                   , /*X:*/findX(point)+10, /*Y:*/235, Color.RED, /*fontsize:*/15);
             }
         } // for point 1..12
 
@@ -1165,7 +1171,8 @@ final static int DOT_SIZE = 4;
                     g_buffer.fill(new Ellipse2D.Double(findX(point), findY(point) - 30 - i*30, 29, 29));
                 }
                 /* note: findX can return -1 if it doesn't know the point */
-                putString(String.valueOf(myBoard.getHowManyBlotsOnPoint(point)), /*X:*/findX(point)+10, /*Y:*/255, Color.RED, /*fontsize:*/15);
+                putString(String.valueOf(myBoard.getHowManyBlotsOnPoint(point))
+                   , /*X:*/findX(point)+10, /*Y:*/255, Color.RED, /*fontsize:*/15);
             }
         } // for point 13..24
     } // drawMen( )

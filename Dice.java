@@ -15,15 +15,17 @@ public class Dice
     /* if you add more fields here, add them to the copy constructor, also! 
        Beware deep copy if the new fields hold (pointers to) objects! */
     private int[ ] dice = new int[howManyDice];
+    /* beware! Outside world talks about getUsed(1) which refers to used[0], getUsed(2) means used[1], etc */
     private boolean[ ] used = new boolean[maxMovesCount]; /* was called "used_move". */
-    /* old code: usedDice == 1 means first dice has been used
+    private int doubletMovesCountdown = 0; /* should be called howManyPartialMovesAvailable */
+    
+    /* old code for used: usedDice == 1 means first dice has been used
        usedDice == 2 means second dice has been used
        usedDice == 0 means no die have been used yet
        doubletMovesCountdown keeps a countdown of total number of moves available, from 4 when doubles.  */
 
     private boolean rolled = false;
     private Random rdice = null; // random number generator, gets started in constructor.
-    private int doubletMovesCountdown = 0;
 
     static final int howManyDice = 2;
     static final int maxMovesCount = 4; /* Bonus for getting doubles. Would be diff with more dice. */
@@ -64,31 +66,32 @@ public class Dice
      * If we get more dice, this has to die.
      * Only accepts rolls of minDiceVal .. maxDiceVal  or Dice.UNROLLED
      * Should it accept 0's so I can pass around unrolled dice? I guess so.
+     * Figures out rolled status based on the values it gets for the Dice:
+     * Either both dice have values in the "rolled" range or both must be UNROLLED:
+     * This will throw exception if one diceValue is UNROLLED while other is in rolled range!
      */
-    public Dice(int newDice1, int newDice2, boolean newRolled) throws IllegalArgumentException {
-        if (howManyDice > 2) {
+    public Dice(int newDice1, int newDice2/*, boolean newRolled*/) throws IllegalArgumentException {
+        if (! (howManyDice == 2)) {
             throw new IllegalArgumentException("Can't use the 2 dice constructor because we have " + howManyDice + " dice!");
         }
         if (! legitDiceValue( newDice1 ) ) {
-            String myMsg = "dice1 is given bad value '" + newDice1 + "' not 0 and not [" + minDiceVal + ".." + maxDiceVal + "]";
-            throw new IllegalArgumentException(myMsg);
+            throw new IllegalArgumentException("dice1 is given bad value '" + newDice1 
+               + "' not 0 and not [" + minDiceVal + ".." + maxDiceVal + "]");
         }
         if (! legitDiceValue( newDice2 )) {
-            String myMsg = "dice2 is given bad value '" + newDice2 + "' not 0 and not [" + minDiceVal + ".." + maxDiceVal + "]";
-            throw new IllegalArgumentException(myMsg);
+            throw new IllegalArgumentException("dice2 is given bad value '" + newDice2 
+               + "' not 0 and not [" + minDiceVal + ".." + maxDiceVal + "]");
         }
-        if (newRolled && ((newDice1 == UNROLLED) || (newDice2 == UNROLLED))) {
-            throw new IllegalArgumentException("Bad dice, claim to be rolled but have values " + newDice1 + "," + newDice2);
+        if ((newDice1 != newDice2) && ((newDice1 == UNROLLED) || (newDice2 == UNROLLED))) {
+            throw new IllegalArgumentException("Bad dice pair '" + newDice1 + "," + newDice2 
+                +"', must both be UNROLLED or both be" + minDiceVal + ".." + maxDiceVal);
         }
-        if ( !newRolled && ((newDice1 != UNROLLED) || (newDice2 != UNROLLED))) {
-            throw new IllegalArgumentException("Bad dice, claim to be not rolled but have values " + newDice1 + "," + newDice2);
-        }
+        /* so either dice are both unrolled, or both rolled, and it makes no difference which one tells us */ 
+        rolled = (newDice1 != UNROLLED);
         dice[0] = newDice1;
         dice[1] = newDice2;
-        rolled = newRolled;
         rdice = new Random(); // random number generator, gets started in constructor.
-        resetUsedDice( );
-        resetDoubletMovesCountdown( );
+        resetUsedDice( ); /* calls        resetDoubletMovesCountdown( ); */
     } /* constructor */
 
     
@@ -112,7 +115,7 @@ public class Dice
      * convenience method.
      * Note: there is no dice0
      */   
-    public int getDice1() {
+    public int getDie1() {
         return dice[0];
     } 
 
@@ -121,7 +124,7 @@ public class Dice
      * convenience method
      * Note: there is a dice2, and there is no dice0
      */   
-    public int getDice2() {
+    public int getDie2() {
         return dice[1];
     } 
     
@@ -130,7 +133,7 @@ public class Dice
      * Dice are named "1", "2" ... up to howManyDice (there is no dice 0!)
      * corresponding to hidden array dice[0], dice[1], respectively
      */
-    public int getDice( int whichDie) {
+    public int getDie( int whichDie) {
         if (! legitDieNum(whichDie)) {
             throw new IllegalArgumentException("bad die number '" + whichDie + "'");
         }
@@ -141,31 +144,37 @@ public class Dice
     /**
      * This for setting a specified individual die.
      * Can't use this to set first two dice at once! Use "roll(5,6)" to do that.
-     * This could really screw up the usedDice statistics...
+     * This expects dice numbers 1 or 2 (not array indices 0,1!!)
+     * A changed die is marked as unused, and the DoubletCountdown starts over from the top!
      */
     public void setDie( int whichDie, int newRoll ) {
         if (! legitDieNum(whichDie)) {
-            throw new IllegalArgumentException("Can't talk to dice '" + whichDie + "', we only have dice 1.." + howManyDice);
+            throw new IllegalArgumentException("Can't talk to dice#'" 
+              + whichDie + "', we only have dice#1.." + howManyDice);
         }
         if (! legitDiceValue(newRoll)) {
-            throw new IllegalArgumentException("Bad dice value '" + newRoll + "', our dice only can roll " + minDiceVal + ".." + maxDiceVal);
+            throw new IllegalArgumentException("Bad dice value '" + newRoll 
+              + "', our dice only can roll values " + minDiceVal + ".." + maxDiceVal);
         }
-        if (dice[whichDie] != newRoll) {
-            dice[whichDie] = newRoll;
-            used[whichDie] = false;
-        }
-        if (allDiceHaveValues()) {
-            rolled = true;
-        }
-        resetDoubletMovesCountdown( );
-    }
+        if (dice[whichDie - 1] != newRoll) { /* okay, changing a die */
+            dice[whichDie - 1] = newRoll;
+            used[whichDie - 1] = false;    
+            resetDoubletMovesCountdown( );
+            if ((! rolled) && (allDiceHaveValues())) { //changing to "rolled" status!
+                rolled = true;
+                resetUsedDice( );
+            } // changed rolled status
+        } // changed a die
+    } /* setDie( ) */
     
     
     /**
-     * I don't want to have a setRolled( ) because I think this is better: rolls all dice and sets rolled to true.
+     * I don't want to have a setRolled( ) because I think this is better: 
+     * this rolls all dice and sets rolled to true.
      * To invalidate the dice, use "reset( )"
      * Unfortunately, if receiving a networked roll, we need to set rolled to true, I guess.
-     * Note: there is a convenience version of this for setting two dice roll(int,int)
+     * Note: there is a convenience version of this for setting two dice "roll(int,int)" 
+     * which first calls this and then sets the values.
      */
     public void roll( ) {
         for (int i=0; i<howManyDice; ++i) {
@@ -174,23 +183,26 @@ public class Dice
         rolled = true;
         resetDoubletMovesCountdown( );
         resetUsedDice( );
-        //System.out.println("I just rolled the dice and got " + this.toString( ) + "!");
+        System.out.println("I just rolled the dice and got " + this.toString( ) + "!");
     }
 
     
     /**
-     * changes the first two dice to specified values, is convenience
+     * changes the first two dice to specified values, is for convenience
      */
     public void roll(int newRoll1, int newRoll2 ) {
         if (! legitDiceValue(newRoll1)) {
-            throw new IllegalArgumentException("Bad dice value '" + newRoll1 + "', our dice only can roll " + minDiceVal + ".." + maxDiceVal);
+            throw new IllegalArgumentException("Bad dice value '" + newRoll1 
+               + "', our dice only can roll " + minDiceVal + ".." + maxDiceVal);
         }
         if (! legitDiceValue(newRoll2)) {
-            throw new IllegalArgumentException("Bad dice value '" + newRoll1 + "', our dice only can roll " + minDiceVal + ".." + maxDiceVal);
+            throw new IllegalArgumentException("Bad dice value '" + newRoll1 
+               + "', our dice only can roll " + minDiceVal + ".." + maxDiceVal);
         }
         roll( );
         dice[0] = newRoll1;
         dice[1] = newRoll2;
+        System.out.println("I changed the rolled dice to " + this.toString( ) + "!");
     }
     
     
@@ -198,16 +210,20 @@ public class Dice
     /**
      * If we want to manually set the dice values, set them all before setting "rolled" to true
      * because I will squawk if some of the dice don't have values (are UNROLLED).
-     * It's probably easier to just roll( ) the dice and then change some of their values.
+     * It's probably easiest to just call roll(newDie1val, newDie2val)
+     * (or do what roll(int,int) does: call roll( ) and then change some of their values.
+     * 
+     * Hmmm, if the dice are already rolled, this has no effect, (doesn't reset the used and doubletcountdown)
      */
     public void setRolled(boolean newRolled) {
         if (newRolled == false) {
             rolled = false;
             reset( );
         } else if (allDiceHaveValues()) {
-            rolled = true;
-            resetDoubletMovesCountdown( );
-            resetUsedDice( );
+            if (!rolled) { /* if this is a change ... */
+                rolled = true;
+                resetUsedDice( ); /* calls             resetDoubletMovesCountdown( ); */
+            }
         } else {
             throw new IllegalArgumentException("Uh-oh: dice think they are rolled but some don't have values.");
         }
@@ -244,17 +260,27 @@ public class Dice
     }
     
     
+    
+    /**
+     * gets the private "rdice" random number generator.
+     * Why should anybody need it? I don't know, but I'm revealing it
+     * for unit testing. Might be null!
+     */
+    public Random getRDice( ) {
+        return rdice;
+    }
+    
+    
     /**
      * note: if I get doubles, I'm keeping track of 4 usable dice!
+     * Users are speaking in terms of die#1 and die#2 which use our private used[0] and used[1] respectively.
+     * And I'm sneaking up on the idea of coding doubles as 4 (identical) dice 1..4, so allowing up to 4 here.
      */
     public boolean getUsedDie( int newUsedDie ) {
-        /* starting to replace this with an array, I'm just hard-coding the
-           temporary code's limits. */
-           if ( ! ((0<= newUsedDie) && (newUsedDie <= maxMovesCount)) ) {
-            throw new IllegalArgumentException("bad newUsedDie '" + newUsedDie + "', should be 0, 1, or 2");
+       if ( ! ((1<= newUsedDie) && (newUsedDie <= maxMovesCount)) ) {
+            throw new IllegalArgumentException("bad newUsedDie '" + newUsedDie + "', should be 1.." + maxMovesCount);
         }
-        return used[newUsedDie];
-         //  throw new IllegalArgumentException("getUsedDice has a new style: specify which dice you're curious about");
+        return used[newUsedDie-1];
     }
     
     
@@ -279,15 +305,19 @@ public class Dice
             dice[i] = UNROLLED;
         }
         rolled = false;
-        resetDoubletMovesCountdown( );
-        resetUsedDice( );
+        resetUsedDice( ); /* calls         resetDoubletMovesCountdown( ); */
     }
     
     
+    /**
+     * Tells all the dice that they are unused.
+     * This also resetDoubletMovesCountdown( ) so don't make it in turn call us!
+     */
     public void resetUsedDice( ) {
         for (int i=0; i<maxMovesCount; ++i) {
             used[i] = false;
         }
+        resetDoubletMovesCountdown( );
     }
 
     
@@ -330,7 +360,8 @@ public class Dice
     
     public void setDoubletMovesCountdown(int newCountDown) {
         if (! (( 0 <= newCountDown) && (newCountDown <= maxMovesCount))) {
-            throw new IllegalArgumentException("bad doubletMovesCountdown '" + newCountDown + "', can only be 0.." + maxMovesCount);
+            throw new IllegalArgumentException("bad doubletMovesCountdown '" 
+               + newCountDown + "', can only be 0.." + maxMovesCount);
         }
         doubletMovesCountdown = newCountDown;
     }
