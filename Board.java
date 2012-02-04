@@ -89,10 +89,16 @@ public class Board {
     public static final int howManyBlackBlots = howManyBlots; /* some might be on bar or did bear off */
     public static final int howManyDice = 2; /* with 3 dice could we do triples of rolls if all 3 dice the same? */
     public static final int diceHighNum = 6; /* we could use funky dice! */
-    
+    public final static int HOW_MANY_POINTS_IN_QUADRANT = 6;
+
     
     /**
      * Build a new game board.
+     * I was considering having another constructor that takes numeric parameter
+     * of which test board you want, but realized it is not necessary: it is 
+     * so easy to tell a newly constructed board to merely b.makeBoardWithoutBlots( ) 
+     * or b.makeStartingBoard( ) or b.makeAlmostDoneGame( ) or b.make3BlotGame( )!
+     * 
      * Can constructors throw exceptions? Shouldn't this be throwing?
      */
     public Board(Game myNewGame) {
@@ -107,7 +113,7 @@ public class Board {
         whichColorOnPoint = new int[howManyPoints + 1];
 
         try {
-            /* makeStartingBoard( ); */ 
+            /* regular games start with "makeStartingBoard( ); */ 
             make3BlotGame( );   /* which first calls makeBoardWithoutBlots( ) */
             /* makeEasyHitStartingBoard( ); */
         } catch( BadBoardException e ) {
@@ -154,6 +160,7 @@ public class Board {
 
      /**
       * make sure the bars and bears and points are all free of blots.
+      * Should this myDice.reset( ); ?? probably
       */
      void makeBoardWithoutBlots( ) {
         for (int i=0; i<=howManyPoints; i++) { /* why start at 0? For prettier pointer numbering 1..24, ignore the 0's? */
@@ -165,6 +172,7 @@ public class Board {
         black_bar = 0;
         white_bear = 0;
         black_bear = 0;
+        myDice.reset( );
      } /* makeBoardWithoutBlots */
      
     
@@ -230,7 +238,7 @@ public class Board {
         checkForBadNumberOfBlots( black );
     } // makeAlmostDoneGame
     
-    
+  
      /** 
      * black and white each have removed 14 blots already...
      * note: white ends past 24, black ends below 1.
@@ -255,6 +263,10 @@ public class Board {
      * Doesn't check legality of move, doesn't check whether player is on bar,
      * so shouldn't be called willy nilly!
      * 
+     * Can move Blots in from bar, so is a partner with "moveToBar( )"
+     * Maybe there should be a "moveFromBar( )" that includes the middle of this
+     * and is called by this if necessary. Could moveFromBar be called by others?
+     * 
      * Apparently old_pos value -1 meant from bar???
      */
     public void moveBlot(int playerColor, int old_pos, int newPointNum) {
@@ -266,16 +278,17 @@ public class Board {
         }
         // If the move is coming from a bar, remove it from the bar
         // and add it to the point
+        int howManyBlotsOnDest =  getHowManyBlotsOnPoint(newPointNum); /* cache */
         
-        if (old_pos == WHITE_BAR_LOC /*0*/) {
-            if ((playerColor==white) && (white_bar > 0)) {
+        if (old_pos == WHITE_BAR_LOC ) {
+            if ((playerColor==white) && (white_bar > 0)) { /* "(white_bar>0)" is equiv of  "onBar(white)" */
                 white_bar--;
             } else if (playerColor!=white) {
                 throw new IllegalArgumentException("color '" + colorName( playerColor ) + "' isn't white so can't move from WHITE_BAR_LOC.");
             } else if (white_bar <= 0) {
                 throw new IllegalArgumentException("player '" + colorName( playerColor ) + "' can't move from WHITE_BAR_LOC since no blots are there!");
             }
-            setPoint(newPointNum, getHowManyBlotsOnPoint(newPointNum) + 1, playerColor);
+            setPoint(newPointNum, howManyBlotsOnDest + 1, playerColor);
         }
         if (old_pos == BLACK_BAR_LOC /*25*/) {
             if ((playerColor==black) && (black_bar > 0)) {
@@ -287,12 +300,14 @@ public class Board {
                 throw new IllegalArgumentException("player '" + colorName( playerColor ) 
                     + "' can't move from BLACK_BAR_LOC since no blots are there!");
             }
+            /* omg, why was this next line missing? Explains black not coming in from bar ! */
+            setPoint(newPointNum, howManyBlotsOnDest + 1, playerColor);
         } else {
             // Move is coming from another point
             // Decrease the number of blots on the old point
             int howManyOnOldPoint = getHowManyBlotsOnPoint(old_pos);
             if (howManyOnOldPoint > 0) {
-                   // could use "takeOneBlotOffPoint(old_pos)" but why 
+                   // next line is equiv to  "takeOneBlotOffPoint(old_pos)" 
                 setPoint(old_pos, howManyOnOldPoint - 1, playerColor);
                 if (howManyOnOldPoint==0) {
                     setPoint(old_pos, 0, neutral);
@@ -302,7 +317,7 @@ public class Board {
                     + old_pos + "' since no blots are there!");
             }
             // Increase the blots on the new point
-            setPoint(newPointNum, getHowManyBlotsOnPoint(newPointNum) + 1, playerColor);
+            setPoint(newPointNum, howManyBlotsOnDest + 1, playerColor);
         }
     } /* moveBlot */
 
@@ -321,7 +336,7 @@ public class Board {
         }
         // Remove a blot from the old point
         takeOneBlotOffPoint(old_point);
-        // setPoint(old_point, getHowManyBlotsOnPoint(old_point,playerColor) - 1, playerColor);
+        // equiv: setPoint(old_point, getHowManyBlotsOnPoint(old_point,playerColor) - 1, playerColor);
         if (playerColor==white) {
             white_bear++;
         } else {
@@ -801,13 +816,14 @@ public class Board {
 
 
     /**
+     * This seems partly misnamed: shouldn't it be "setNumOfBlotsOnPoint( )"??
      * Specified point will end up holding "howMany" blots of specified color. 
      * (Might be 0 blots: cleared off, neutral). In that case any color is okay (black, white, neutral).
      * Might the board be temporarily having a bad number of blots while one is moving??
-     * Shouldn't we be checking for legit END-point location??
+     * Checking for legit END-point location, but have to treat bar special??
      */
     public void setPoint(int destPointNum, int howMany, int color/* not merely playerColor*/) {
-        if ( ! legitColor( color ) ) {
+        if ( ! legitColor( color ) ) { /* neutral is allowed by "legitColor( )", unlike "legitPlayerColor( )" */
             throw new IllegalArgumentException("Bad color '" + color + "' in setPoint( )");
         }
         if (color == neutral) {
@@ -818,7 +834,7 @@ public class Board {
                 howManyOnPoint[destPointNum] = 0;
                 whichColorOnPoint[destPointNum] = neutral;
             }
-        } else if ( ! legitEndLoc(destPointNum, color )) { /* checks that color is black or white */
+        } else if ( ! legitEndLoc(destPointNum, color )) { /* also checks legitPlayerColor */
             throw new IllegalArgumentException("Bad destPointNum '" + destPointNum + "' in setPoint( )");
         } else if ( (howMany < 0) || (howMany > howManyBlots) ) {
             /* ******* Hey, should we check that there are legit num of blots on board?? No,
@@ -831,11 +847,25 @@ public class Board {
         } else if ((howMany > 0) && ( ! legitPlayerColor(color) )) {
             throw new IllegalArgumentException("Bad color '" + color + "' for blots");
         } else {
-            howManyOnPoint[destPointNum] = howMany;
-            if (howMany==0) {
-                whichColorOnPoint[destPointNum]=neutral;
+            /* finally getting down to work, having dealt with neutral and legitimacy issues */
+            /* What if we're dealing with a BAR? Could such a thing happen??
+                there is a moveToBar( ) method for hitting a blot. How do blots get off bar? */
+            /* Could we be dealing with BEAR_OFF or PAST_BEAR_OFF also?? */
+            if ((destPointNum == WHITE_BAR_LOC) && (color == white)) {
+                System.out.println("hmmm, weird, doing 'setPoint(" + destPointNum + ",/*howMany:*/" + howMany + ",/*player:*/" 
+                    + colorName(color) + ") for WHITE_BAR but I'll give it a try.");
+                white_bar = howMany;
+            } else if ((destPointNum == BLACK_BAR_LOC) && (color == black)) {
+                System.out.println("hmmm, weird, doing 'setPoint(" + destPointNum + ",/*howMany:*/" + howMany + ",/*player:*/" 
+                    + colorName(color) + ") for BLACK_BAR but I'll give it a try.");
+                black_bar = howMany;
             } else {
-                whichColorOnPoint[destPointNum] = color;
+                howManyOnPoint[destPointNum] = howMany;
+                if (howMany==0) {
+                    whichColorOnPoint[destPointNum] = neutral;
+                } else {
+                    whichColorOnPoint[destPointNum] = color;
+                }
             }
         }
     } // setPoint( )
@@ -848,7 +878,9 @@ public class Board {
     /**
     * Moving to "bar" from the specified point. (Checks that can't be coming from BEAR nor BAR!)
     * The point then getting set to color neutral because only a single can get sent to the bar.
-    * What if more blots are there: bogus setup
+    * What if more blots are there: bogus setup.
+    * There doesn't seem to be an equivalent "moveFromBar(destPoint, playerColor )" method
+    * but "moveBlot( from, to, color)" works when the fromLoc is a bar.
     */
     public void moveToBar(int pointNum, int bounceeColor) {
         if ( ! legitStartLoc(pointNum,bounceeColor)) { // also checks if legitPlayerColor
@@ -1003,6 +1035,10 @@ public class Board {
     * Might be useful for comparing boards.
     */
     public int getHowManyProtected(int playerColor ) {
+         if (! legitPlayerColor(playerColor)) {
+             throw new IllegalArgumentException("bad color '" + playerColor + "'");
+         }
+
         int howManyProtected = 0;
 
         for (int i=1; i<=howManyPoints; i++)  {
@@ -1212,11 +1248,11 @@ public class Board {
     } // getWhiteBeHitProbability( )
 
     
-    public final static int HOW_MANY_POINTS_IN_QUADRANT = 6;
     /**
-     * What are its 4 quadrants called? Perhaps 1..6 is q "1", 7..12 = q"2", etc?
-     * What about bar and bear?
-     * Bar is quadrant 1?? or 0?? Or Quadrants don't matter for bar?
+     * Points 1..6 are quadrant "1", 7..12 = q"2", etc.
+     * This works for white and black (reverse the pointNum itself before calculating black).
+     * What about bar and bear? Bar is quadrant 1?? or 0?? Or don't matter for bar?
+     * Well, bar is definitely not 4, since all pieces have to be in 4 to permit bearing off.
      * [ ]This would be better dividing by howManyPoints and taking floor?
      */
     public int quadrantForPoint( int pointNum, int playerColor ) throws ArrayIndexOutOfBoundsException {

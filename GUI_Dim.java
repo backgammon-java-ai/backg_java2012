@@ -27,6 +27,7 @@ public class GUI_Dim
     final static int DICE2_LEFT = DICE1_LEFT + 50;
     final static int DICE_TOP = 200;
     
+    /* triangle constructor receives left,top,width,height */
     final static Rectangle guiRect = new Rectangle(LEFT_EDGE, BoardPict.BOARD_TOP_EDGE, GUI_WIDTH, GUI_HEIGHT);
 
     

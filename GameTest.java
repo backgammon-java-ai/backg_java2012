@@ -13,8 +13,10 @@ import org.junit.Test;
  */
 public class GameTest
 {
-    private Game g1;
-    private Board b1;
+    private Game g;
+    private Board b;
+    private int ai = Board.black; /* playerColor */
+    
 
     /**
      * Default constructor for test class JBackgammonTest
@@ -48,52 +50,71 @@ public class GameTest
     
 
     @Test
-    public void testGame()
-    {
-        Game g = new Game(false);
+    public void testGame() {
+        g = new Game(false);
         g.setCurrentPlayer(g.black);
         assertEquals(Board.black, g.getCurrentPlayer( ) );
-        
     }
 
     
     @Test
-    public void test2pieceBoard()
-    {
-        Game g = new Game(false);
-        Board myb = g.getMyBoard();
-        assertEquals(Board.black, myb.getColorOnPoint(12));
+    public void testAlmostDoneGame( ) {
+        g = new Game();
+        b = g.getMyBoard();
+        assertNotNull(b);
+        try {
+            b.makeAlmostDoneGame( );
+            g.setCurrentPlayer(ai);
+            b.myDice.roll(3,4);
+            assertTrue(b.canBearOff(ai));
+            assertFalse(b.onBar(ai));
+        } catch(Exception e) {
+            /* isn't there a way to test without catching exceptions? */
+            fail(e.toString( ));
+        }
+    }
+    
+
+    @Test
+    public void test3BlotBoard() {
+        g = new Game();
+        b = g.getMyBoard();
+        try {
+            b.make3BlotGame( );
+            assertEquals(ai, b.getColorOnPoint(12));
+        } catch(Exception e) {
+            /* isn't there a way to test without catching exceptions? */
+            fail(e.toString( ));
+        }
     }
     
 
    
 
     @Test
-    public void testBoardAllMoveable()
-    {
-        Game g1 = new Game(false);
-        Board b1 = g1.getMyBoard();
-        assertNotNull(b1);
-        b1.myDice.roll( );
-        LocList ll = b1.allMoveableBlotLocs( Board.white );
+    public void testBoardAllMoveable() {
+        g = new Game();
+        b = g.getMyBoard();
+        assertNotNull(b);
+        b.myDice.roll( );
+        LocList ll = b.allMoveableBlotLocs( Board.white );
         System.out.println(ll.myList);
     }
 
     
 
     @Test
-    public void testGameBoardDoPartialMove2()
-    {
-        g1 = new Game(false);
-        b1 = g1.getMyBoard();
-        b1.myDice.roll();
+    public void testGameBoardDoPartialMove2() {
+        g = new Game(false);
+        b = g.getMyBoard();
+        b.myDice.roll();
 
-        assertNotNull(b1.allMoveableBlotLocs(Board.white));
-        LocList ll1 = b1.allMoveableBlotLocs(Board.white);
+        assertNotNull(b.allMoveableBlotLocs(Board.white));
+        LocList ll1 = b.allMoveableBlotLocs(Board.white);
         assertNotNull(ll1);
         assertEquals(1, ll1.size());
-        g1.setCurrentPlayer(Board.black);
-        LocList ll2 = b1.allMoveableBlotLocs(Board.black);
+        g.setCurrentPlayer(ai);
+        LocList ll2 = b.allMoveableBlotLocs(Board.black);
         assertNotNull(ll2);
         assertEquals(2, ll2.size());
     }
@@ -101,28 +122,33 @@ public class GameTest
 
 
     @Test
-    public void testAI()
-    {
-        Game g2 = new Game(false);
-        Board b1 = g2.getMyBoard();
-        assertNotNull(b1);
-        g2.setCurrentPlayer(Board.black);
+    public void testAI() {
+        g = new Game(false);
+        b = g.getMyBoard();
+        assertNotNull(b);
+        g.setCurrentPlayer(ai);
+        assertEquals(ai,g.getCurrentPlayer( ));
     }
+    
 
     @Test
-    public void testBlackMoveDice3n6()
-    {
-        Game g1 = new Game(false);
-        g1.doRoll();
-        Board b1 = g1.getMyBoard();
-        assertNotNull(b1);
-        b1.myDice.roll(3, 6);
-        g1.setCurrentPlayer(Board.black);
-        LocList ll1 = b1.allMoveableBlotLocs(Board.black);
-        assertNotNull(ll1);
-        assertEquals("[12, 20]", ll1.toString());
-        java.util.ArrayList<PartialMove> allpm1 = b1.allLegalPartialMoves(Board.black);
-        assertNotNull(allpm1);
+    public void testBlackMoveDice3n6() {
+        g = new Game(false);
+        b = g.getMyBoard();
+        try {
+            b.make3BlotGame( );
+            assertNotNull(b);
+            b.myDice.roll(3, 6);
+            g.setCurrentPlayer(ai);
+            LocList ll1 = b.allMoveableBlotLocs(ai);
+            assertNotNull(ll1);
+            assertEquals("[12, 20]", ll1.toString());
+            java.util.ArrayList<PartialMove> allpm1 = b.allLegalPartialMoves(ai);
+            assertNotNull(allpm1);
+        } catch(Exception e) {
+            /* isn't there a way to test without catching exceptions? */
+            fail(e.toString( ));
+        }
     }
 }
 

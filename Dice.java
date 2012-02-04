@@ -70,7 +70,9 @@ public class Dice
      * Either both dice have values in the "rolled" range or both must be UNROLLED:
      * This will throw exception if one diceValue is UNROLLED while other is in rolled range!
      */
-    public Dice(int newDice1, int newDice2/*, boolean newRolled*/) throws IllegalArgumentException {
+    public Dice(int newDice1, int newDice2/*, boolean newRolled*/) 
+      /* throws IllegalArgumentException, ArrayIndexOutOfBoundsException */
+      {
         if (! (howManyDice == 2)) {
             throw new IllegalArgumentException("Can't use the 2 dice constructor because we have " + howManyDice + " dice!");
         }
@@ -135,7 +137,7 @@ public class Dice
      */
     public int getDie( int whichDie) {
         if (! legitDieNum(whichDie)) {
-            throw new IllegalArgumentException("bad die number '" + whichDie + "'");
+            throw new IllegalArgumentException("bad die number '" + whichDie + "', should be 1.." + howManyDice);
         }
         return dice[whichDie - 1]; 
     } /* getDice(int ) */
@@ -149,7 +151,7 @@ public class Dice
      */
     public void setDie( int whichDie, int newRoll ) {
         if (! legitDieNum(whichDie)) {
-            throw new IllegalArgumentException("Can't talk to dice#'" 
+            throw new IllegalArgumentException("Can't set value of dice#'" 
               + whichDie + "', we only have dice#1.." + howManyDice);
         }
         if (! legitDiceValue(newRoll)) {

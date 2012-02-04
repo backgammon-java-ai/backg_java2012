@@ -52,7 +52,24 @@ Still not sure if point 25 is being used for anything. Program dies if it doesn'
 
 
 ...Bugs
+[ ]Bear Off button doesn't light up when black gets all her pieces into quadrant 4! (White's bear btn lights)
+oh, quadrant checker fail: java.lang.IllegalArgumentException: can't bear off from point '6' which isn't in final quadrant for player black
+	at Board.bearOff(Board.java:334)
+I wonder if point '5' counts as quad 4 for black ai??
+also, clicking a black blot that would perfectly go to bear off (not past bear off) gets:
+bad pointNum '-100'
+	at Board.canLandOn(Board.java:1796)
+	at Board.handlePoint(Board.java:1479)
+[ ]ComputerMove button should be disabled during white's turn!
+[ ]Manually moving a black piece (in final quadrant, if that matters) gets
+java.lang.IllegalArgumentException: bad pointNum '-100'
+	at Board.canLandOn(Board.java:1796)
+	at Board.canMove(Board.java:1876)
+	at Board.doPartialMove(Board.java:1776)
 [ ]"New Game" button doesn't enable the "Roll Dice" button so white can't make her first move.
+IllegalArgumentException: Can't start moving from point '0'
+	at Board.setOldPoint(Board.java:474)
+	at Game.resetGame(Game.java:1303)
 [ ]There might be big trouble in Game.doMove( ) which I've been messing with. Does anybody call it?
 Does anybody ever endTurn( )?
 [ ]Black can't come in from bar: AI error: java.lang.IllegalArgumentException: bad pointNum '-100'

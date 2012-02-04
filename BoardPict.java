@@ -50,11 +50,16 @@ public class BoardPict {
     Rectangle upperRightRect;
     Rectangle lowerLeftRect;
     Rectangle lowerRightRect;
+    
+    /* triangle constructor receives left,top,width,height */
     final static Rectangle barRect= new Rectangle(BOARD_LEFT_EDGE + QUADRANT_WIDTH, BOARD_TOP_EDGE, 
              BAR_WIDTH, BOARD_BOTTOM_EDGE); 
 
     /**
-     * Constructor for objects of class BoardPict
+     * Constructor for objects of class BoardPict.
+     * Hmmm, could use static initializers like barRect above. 
+     * If board gets resizeable many of the things above would need to merely lose the "final".
+     * Beware of changing board size while a move or click is going on? 
      */
     public BoardPict() {
         upperLeftRect = new Rectangle(BOARD_LEFT_EDGE, BOARD_TOP_EDGE, QUADRANT_WIDTH, QUADRANT_HEIGHT);
