@@ -28,8 +28,9 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 /**
  * File: Game.java (was JBackgammon.java)
  *
- * Description: This file contains the guts of the main program.  All drawing,
- * control, and rule-checking occurs here. 
+ * Description: This file contains the guts of the main program.  
+ * All drawing, control, and rule-checking occurs here.
+ * A "Game" has a board, and the board has dice. 
  */
 
  
@@ -53,35 +54,30 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
     static final int white = 1;
     static final int black = 2;
 
-
-    // Buffers used for double buffering
-    BufferedImage b_bimage;
-    Graphics2D g_buffer;
     static final int LEFT_MARGIN = 20;
     static final int TOP_MARGIN = 60;
+
+    // Buffers for double buffering
+    BufferedImage b_bimage;
+    Graphics2D g_buffer;
     BoardPict myBoardPict = new BoardPict( /* could receive board size param someday! */);
     Board myBoard = null; // this gets set up in constructor or die
     AI myAI;
-    private int current_player = white;
+    private int currentPlayer = white;
 
     // This contains some booleans about the status of the game
     Status status = null;
 
-    // Class that performs the network operations
-    Communication comm = null;
+    
+    Communication comm = null;    // performs the network operations
+    JTextField msg_input = null;    // for displaying messages (during network game?)
+    JTextArea msg_display = null;    // display messages between the players
+    JScrollPane msg_scrollpane = null;    // for scrolling messages
 
-    // Textfield used for typing messages
-    JTextField msg_input = null;
-
-    // TextArea used to display messages between the players
-    JTextArea msg_display = null;
-
-    // Scroll pane to provide scrolling capabilities for messages
-    JScrollPane msg_scrollpane = null;
 
     // The buttons the gui uses for various purposes.
     // Bummer: the buttons that show legal available moves on the board
-    // are part of this mess, rather than being part of the Board.
+    // are part of this, rather than being part of the Board.
     FixedButton FButton[] = new FixedButton[9]; /* array of buttons 0..8 */
 
     static final int btn_CancelMove = 0;
@@ -115,17 +111,28 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
      * Game-related Methods 
      * ================================================*/
 
+
+/**
+    * Game class constructor
+    * assumes you're playing against AI.
+    * (Use the Game(boolean) constructor if you want to set up network game)
+    */
+    public Game() {
+        this(false /* networkedTF */);  // merely call fancier constructor
+    }
+
+
     /**
     * Game class constructor
     * Sets title bar, size, shows the window, and does the GUI
     */
-    public Game(boolean n /* networked true/false */) {
+    public Game(boolean networkTF /* networked true/false */) {
         setTitle("JBackgammon");
-        setResizable(false);
+        setResizable(false); /* someday this can be resizable when all dimensions are relative */
         status = new Status();
         myBoard = new Board(this);
         myAI = new AI( this);
-        status.networked = n;
+        status.networked = networkTF;
 
         addMouseListener(new tablaMouseListener(this));
 
@@ -133,22 +140,14 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         pack();
 
         for (int i=0; i < FButton.length; i++) {
+            /* create all the buttons */
             FButton[i] = new FixedButton(getContentPane(), this);
         }
 
         if (status.networked) {
-            comm = new Communication((CommunicationAdapter)this);
-            comm.listen();
+            setupNetworking( );
             setSize(myBoardPict.BOARD_WIDTH + GUI_WIDTH/*632*/
                , myBoardPict.BOARD_HEIGHT + BOARD_PADDING + MESSAGE_HEIGHT /*560*/);
-            // Set up the window for messaging
-            getRootPane().setDefaultButton(FButton[btn_SendMessage]);
-            msg_input = new JTextField();
-            getContentPane().add(msg_input);
-            msg_display = new JTextArea();
-            msg_scrollpane = new JScrollPane(msg_display);
-            msg_scrollpane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-            getContentPane().add(msg_scrollpane);
         } else {
             setSize(myBoardPict.BOARD_WIDTH + GUI_WIDTH/*632*/, myBoardPict.BOARD_HEIGHT + BOARD_PADDING);
         }
@@ -162,6 +161,22 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
     } // Game( ) constructor
 
 
+    /**
+      * Called by Game(boolean) constructor if we're networking
+      */
+      private void setupNetworking( ) {
+            comm = new Communication((CommunicationAdapter)this);
+            comm.listen();
+            // Set up the window for messaging
+            getRootPane().setDefaultButton(FButton[btn_SendMessage]);
+            msg_input = new JTextField();
+            getContentPane().add(msg_input);
+            msg_display = new JTextArea();
+            msg_scrollpane = new JScrollPane(msg_display);
+            msg_scrollpane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+            getContentPane().add(msg_scrollpane);
+        } /* setupNetworking( ) */
+
 
      /**
       * Is called by Board, so can't be private.
@@ -170,7 +185,7 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         /*System.out.println("----------------");
         System.out.println("Breakpoint " +  dmsg);
         System.out.println("status.point_selected = " + status.point_selected + "   old_point = " + old_point);
-        System.out.println("current_player = " + current_player + "   usedDice = " + usedDice);
+        System.out.println("currentPlayer = " + currentPlayer + "   Dice = " + getMyBoard( ).myDice);
         System.out.println("potDest1 = " + potDest1 + "   potDest2 = " + potDest2);
         System.out.println("doublet_moves = " + doublet_moves + " doublets = " + getMyBoard().myDice.isDoubles( ));
         // System.out.println("networked = " + status.networked + "  observer = " + status.observer);
@@ -180,20 +195,18 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         System.out.println();*/
     } // debug_msg
 
-    
 
-    
-    
+
+
    /** 
-     * 
      * calls "Board.doPartialMove( )" method
-     * There is a "usedDice" field (in board) which says which which dice have been used.
+     * There is a "getUsedDie( )" (in myBoard().myDice) which says which which dice have been used.
      * (getMyBoard().myDice.isDoubles( ) is true when doubles have been rolled, 
-     * and Board.doubletMovesCountdown keeps track of 4 moves countdown)
+     * and Board.myDice.getDoubletMovesCountdown( ) keeps track of 4 moves countdown)
      * 
      * Note: this switches players by calling game.endTurn( )!
      */
-    /*private*/ void doMove(Move myMove) {
+    /*not private for testing */ void doMove(Move myMove) {
         debug_msg("doMove()");
         int howManyPartialsDone = 0;
         ArrayList<PartialMove> myPartials = myMove.getMyPartials( );
@@ -201,7 +214,7 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
             myBoard.doPartialMove( myPartial );
             howManyPartialsDone++;
             if (getMyBoard().myDice.isDoubles( )) {
-                myBoard.myDice.setDoubletMovesCountdown( myBoard.myDice.getDoubletMovesCountdown( ) - 1 );
+                myBoard.myDice.doubletCountdown( ); /* -1 */
             }
             myBoard.myDice.setUsedDie( myPartial.getWhichDie( ), true );
             // Turn off focus on this point
@@ -213,19 +226,18 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         //boolean switchedplayers = true;
 
         if (!getMyBoard().myDice.isDoubles( )) {
-            // If a move has been made previously,
-            // this is the second move, end the player's turn
-            //if ((myBoard.getUsedMove( )==1) || (myBoard.getUsedMove( )==2)) {
+            // If a move has been made previously, this is 2d move, end the player's turn
+            //if ((myBoard.myDice.getUsedDie(1 )) || (myBoard.getUsedDie( 2)) {
             //if ( howManyPartialsDone > 1?0? might only be able to make one move... 
-                /*myGame.*/endTurn();
+                endTurn();
             //} else {
             //    /*myGame.*/switchedplayers = false;
-            //    myBoard.setUsedMove( whichDie );
+            //    myBoard.setUsedDie( whichDie );
             // }
         } else if (getMyBoard().myDice.isDoubles( )) {
-            //myBoard.setDoubletMovesCountdown( myBoard.getDoubletMovesCountdown( ) - 1 );
+            //myBoard.myDice.doubletCountdown(  );
             //if (myBoard.getDoubletMovesCountdown( )==0) {
-                /*myGame.*/endTurn();
+                endTurn();
             //} else {
             //    /*myGame.*/switchedplayers = false;
            // }
@@ -280,7 +292,7 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         }
 
         if (color==white) {
-            if (myBoard.white_bear==15) {
+            if (myBoard.white_bear==Board.howManyBlots) {
                 if (status.networked) {
                     comm.sendlose();
                 }
@@ -321,22 +333,22 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         repaint();
 
         // Check if the player is on the bar and deal with that right away before player tries to move.
-        if (myBoard.onBar(current_player)) {
-            myBoard.handleBar(current_player);
-        } else if ( ! myBoard.canMove(current_player) ) {
+        if (myBoard.onBar(currentPlayer)) {
+            myBoard.handleBar(currentPlayer);
+        } else if ( ! myBoard.canMove(currentPlayer) ) {
             forfeit();
         }
     } // doRoll( )
 
     
     /**
-     * This could handle more than 2 players...
+     * This could handle more than 2 players with slight modification...
      */
     public void changePlayer() {
-        if (current_player == white) {
-            current_player = black;
+        if (currentPlayer == white) {
+            currentPlayer = black;
         } else {
-            current_player = white;
+            currentPlayer = white;
         }
     } /* changePlayer */
     
@@ -345,7 +357,6 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
     /**
      * End the current player's turn and start the turn
      * of the other player.
-     * [ ]probably have to make this public someday, Julien's idea!!
      * Is called by Board, so it can't be private.
      */
     public void endTurn() {
@@ -353,8 +364,7 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         changePlayer( );
 
         // Reset vars, turn off new game button
-        myBoard.myDice.resetUsedDice( ); /* mark all as unused */
-        myBoard.myDice.reset();  /* puts usedDice to 0 and rolled to false and countdown to 0 */
+        myBoard.myDice.reset();  /* calls resetUsedDice(  ),  sets rolled to false and countdown to 0 */
         FButton[btn_NewGame].setEnabled(false); // new game
         
         repaint();
@@ -398,10 +408,11 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
      * Remove focus from a sertain point which has been selected
      * This allows the player to select a new point.
      * called by Board, so can't be private.
+     * Why does this disable the CancelMove button? No undo?
      */
     public void endPartialMove() {
         status.point_selected = false;
-        // Disable potential move buttons
+        // Disable potential move buttons, which ought to be part of board someday
         /*myGame.*/FButton[btn_AtPotentialMove1].setVisible(false); // potential move 1
         /*myGame.*/FButton[btn_AtPotentialMove2].setVisible(false); // potential move 2
         // Disable "Cancel Move" button
@@ -418,7 +429,7 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
      * returns int white = 1; black = 2; (shouldn't ever have neutral = 0;)
      */
     public int /*PlayerColor*/ getCurrentPlayer( ) {
-        return current_player;
+        return currentPlayer;
     }
     
     
@@ -427,13 +438,12 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
      * Should this acknowledge a change somehow? Shouldn't roll dice, I guess.
      */
     public void setCurrentPlayer(int newPlayerColor ) {
-        /* only change if current_player will become different from before */
-        if ((Board.legitPlayerColor( newPlayerColor )) && (current_player != newPlayerColor)) {
-            current_player = newPlayerColor;
+        /* only change if currentPlayer will become different from before */
+        if ((Board.legitPlayerColor( newPlayerColor )) && (currentPlayer != newPlayerColor)) {
+            currentPlayer = newPlayerColor;
         }
     } 
 
-    
 
 
 
@@ -442,56 +452,61 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
      *   Sets up all the buttons
      */
     public void setupGUI() {
-        FButton[btn_CancelMove].setBounds(475, 355, 135, 25); // cancel move
+        int left = GUI_Dim.BTN_LEFT_EDGE; /* 475 when board is 430 wide */
+        int width = GUI_Dim.BTN_WIDTH; /* 135 */
+        int height = GUI_Dim.BTN_HEIGHT; /* 25 */
+        FButton[btn_CancelMove].setBounds(left, 355, width, height); // cancel move
         FButton[btn_CancelMove].setVisible(true);
         FButton[btn_CancelMove].setText(CANCEL);
         FButton[btn_CancelMove].addActionListener(this);
         FButton[btn_CancelMove].setEnabled(false);
 
-        FButton[btn_RollDice].setBounds(475, 320, 135, 25); // roll dice
+        FButton[btn_RollDice].setBounds(left, 320, width, height); // roll dice
         FButton[btn_RollDice].setVisible(true);
         FButton[btn_RollDice].setText(ROLL_DICE);
         FButton[btn_RollDice].addActionListener(this);
         FButton[btn_RollDice].setEnabled(true);
 
-        FButton[btn_BearOff].setBounds(475, 285, 135, 25); // bear off
+        FButton[btn_BearOff].setBounds(left, 285, width, height); // bear off
         FButton[btn_BearOff].setVisible(true);
         FButton[btn_BearOff].setText(BEAR_OFF);
         FButton[btn_BearOff].addActionListener(this);
         FButton[btn_BearOff].setEnabled(false);
 
-        FButton[btn_AtPotentialMove1].setBounds(650, 490, 9, 10); // potential move 1
+ // potential move 1. Are these coords so it is hiding off the right side?
+        FButton[btn_AtPotentialMove1].setBounds(650, 490, 9, 10);
         FButton[btn_AtPotentialMove1].setVisible(true);
         FButton[btn_AtPotentialMove1].setText(MOVE1);
         FButton[btn_AtPotentialMove1].addActionListener(this);
         FButton[btn_AtPotentialMove1].setEnabled(true);
 
-        FButton[btn_AtPotentialMove2].setBounds(750, 490, 9, 10); // potential move 2
+ // potential move 2. Are these coords so it is hiding off the right side?
+        FButton[btn_AtPotentialMove2].setBounds(750, 490, 9, 10); 
         FButton[btn_AtPotentialMove2].setVisible(true);
         FButton[btn_AtPotentialMove2].setText(MOVE2);
         FButton[btn_AtPotentialMove2].addActionListener(this);
         FButton[btn_AtPotentialMove2].setEnabled(true);
 
-        FButton[btn_NewGame].setBounds(475, 250, 135, 25); // new game
+        FButton[btn_NewGame].setBounds(left, 250, width, height); // new game
         FButton[btn_NewGame].setVisible(true);
         FButton[btn_NewGame].setText(NEW_GAME);
         FButton[btn_NewGame].addActionListener(this);
         FButton[btn_NewGame].setEnabled(true);
         
-        FButton[btn_ComputerMove].setBounds(475, 380, 135, 25); // computer move
+        FButton[btn_ComputerMove].setBounds(left, 380, width, height); // computer move
         FButton[btn_ComputerMove].setVisible(true);
         FButton[btn_ComputerMove].setText(COMPUTER_MOVE);
         FButton[btn_ComputerMove].addActionListener(this);
         FButton[btn_ComputerMove].setEnabled(true);
 
         if (status.networked) {
-            FButton[btn_Connect].setBounds(475, 225, 135, 25); // connect
+            FButton[btn_Connect].setBounds(left, 225, width, height); // connect
             FButton[btn_Connect].setVisible(true);
             FButton[btn_Connect].setText(CONNECT);
             FButton[btn_Connect].addActionListener(this);
             FButton[btn_Connect].setEnabled(true);
 
-            FButton[btn_SendMessage].setBounds(475, TOP_MARGIN + getInsets().top + 412, 135, 25); // send message
+            FButton[btn_SendMessage].setBounds(left, TOP_MARGIN + getInsets().top + 412, width, height); // send message
             FButton[btn_SendMessage].setVisible(true);
             FButton[btn_SendMessage].setText(SEND_MSG);
             FButton[btn_SendMessage].addActionListener(this);
@@ -500,7 +515,7 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
             FButton[btn_RollDice].setEnabled(false); // roll dice
             FButton[btn_NewGame].setEnabled(false); // new game
 
-            msg_input.setBounds(LEFT_MARGIN - getInsets().left, TOP_MARGIN + getInsets().top + 412, 450, 25);
+            msg_input.setBounds(LEFT_MARGIN - getInsets().left, TOP_MARGIN + getInsets().top + 412, 450, height);
 
             msg_scrollpane.setBounds(LEFT_MARGIN - getInsets().left, TOP_MARGIN + getInsets().top + 327, 593, 80);
             msg_display.setEditable(false);
@@ -581,7 +596,8 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
      * Which says what to do if we could not connect to an ip
      */
     public void connectionRefused() {
-        JOptionPane.showMessageDialog(this, "Connection refused.\n\nMake sure the computer name/IP is correct\n" 
+        JOptionPane.showMessageDialog(this, "Connection refused.\n\nMake sure the " 
+        +   "computer name/IP is correct\n" 
            + "and that the destination is running Game in networked mode.");
         status.clicker = false;
         FButton[btn_Connect].setEnabled(true);
@@ -592,7 +608,7 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
      *  The network player has rolled the dice, display them
      */
     public void receiveRolls(int i, int j) {
-        current_player = black;
+        currentPlayer = black;
         myBoard.myDice.setDie(1,i);
         myBoard.myDice.setDie(2, j);
         myBoard.myDice.setRolled(true);
@@ -602,9 +618,12 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
 
     /**
      *  The non-network player got sent to the bar, update the board
+     * Apparently point is a number from the point of view of the opponent,
+     * So we're doing the 25 - point thing..
      */
     public void receiveBar(int point) {
-        myBoard.setPoint(25 - point, 0, neutral);
+          /* int destPointNum, int howMany, int color/* not merely playerColor*/
+        myBoard.setPoint((Board.howManyPoints+1) - point, /*howMany:*/0, /*color:*/neutral);
         myBoard.white_bar++;
         repaint();
     } // receivebar
@@ -738,7 +757,7 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
      */
     public void turnFinished() {
         status.observer = false;
-        current_player = white;
+        currentPlayer = white;
 
         myBoard.myDice.reset(); /* sets rolled = false; */
         startTurn();
@@ -763,11 +782,11 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
             FButton[btn_AtPotentialMove2].setVisible(false);
             repaint();
         } else if (e.getActionCommand().equals(BEAR_OFF)) {
-            myBoard.bearOff(current_player);
+            myBoard.bearOff(currentPlayer);
         } else if (e.getActionCommand().equals(MOVE1)) {
-            myBoard.doPartialMove(myBoard.getOldPoint(), /*toPoint:*/myBoard.getPotDest(1), /*whichDie:*/1, current_player);
+            myBoard.doPartialMove(myBoard.getOldPoint(), /*toPoint:*/myBoard.getPotDest(1), /*whichDie:*/1, currentPlayer);
         } else if (e.getActionCommand().equals(MOVE2)) {
-            myBoard.doPartialMove(myBoard.getOldPoint(), /*toPoint:*/myBoard.getPotDest(2), /*whichDie:*/2, current_player);
+            myBoard.doPartialMove(myBoard.getOldPoint(), /*toPoint:*/myBoard.getPotDest(2), /*whichDie:*/2, currentPlayer);
         } else if (e.getActionCommand().equals(COMPUTER_MOVE)) {
             try {
                 myAI.thinkAndPlay();
@@ -802,19 +821,12 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         g_buffer.clearRect(0, 0, getWidth( ), getHeight( ));
         drawBoard( );
         drawBar( );
-        drawMen( );
+        drawBlots( );
         drawBearStats( );
         drawPipStats( );
 
-        if (myBoard.myDice.getRolled()) {
-            if (current_player==white) {
-                drawDice(myBoard.myDice.getDie(1), 479, 200, Color.WHITE, Color.BLACK);
-                drawDice(myBoard.myDice.getDie(2), 529, 200, Color.WHITE, Color.BLACK);
-            }
-            else {
-                drawDice(myBoard.myDice.getDie(1), 479, 200, myBoardPict.clr_black, Color.WHITE);
-                drawDice(myBoard.myDice.getDie(2), 529, 200, myBoardPict.clr_black, Color.WHITE);
-            }
+        if (myBoard.myDice.getRolled()) { // 
+            drawCurrentDice( );
         }
 
         if ( (status.networked) && (! comm.isConnected() ) ) {
@@ -923,23 +935,29 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         g_buffer.setColor(Color.DARK_GRAY);
         g_buffer.fill(new Rectangle2D.Double(/*left*/455, /*top*/168, /*width*/160, /*height*/30));
 
-        putString(m1, /*X:*/455, /*Y:*/180, Color.WHITE, /*fontsize:*/12);
-        putString(m2, /*X:*/455, /*Y:*/195, Color.WHITE, /*fontsize:*/12);
+        putString(m1, /*X:*/furtherleft, /*Y:*/180, Color.WHITE, /*fontsize:*/12);
+        putString(m2, /*X:*/furtherleft, /*Y:*/195, Color.WHITE, /*fontsize:*/12);
     } // drawPipStats( )
 
 
+       /* shouldn't be final if board is resizable */
+        final static int left = GUI_Dim.BTN_LEFT_EDGE; /* 475 */
+        final static int furtherleft = GUI_Dim.LEFT_EDGE; /* 455 */
 
-
+    /**
+      * Announce how many pieces each player beared off so far
+      */
     public void drawBearStats() {
         String m1, m2;
         m1 = "White Pieces Beared Off: " + myBoard.white_bear;
         m2 = "Black Pieces Beared Off: " + myBoard.black_bear;
+        
 
         g_buffer.setColor(Color.BLACK);
-        g_buffer.fill(new Rectangle2D.Double(475, 130, 150, 30));
+        g_buffer.fill(new Rectangle2D.Double(left, 130, 150, 30));
 
-        putString(m1, /*X:*/455, /*Y:*/150, Color.WHITE, /*fontsize:*/12);
-        putString(m2, /*X:*/455, /*Y:*/165, Color.WHITE, /*fontsize:*/12);
+        putString(m1, /*X:*/furtherleft, /*Y:*/150, Color.WHITE, /*fontsize:*/12);
+        putString(m2, /*X:*/furtherleft, /*Y:*/165, Color.WHITE, /*fontsize:*/12);
     } // drawBearStats( )
 
 
@@ -949,52 +967,82 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         g_buffer.drawString(message, x, y);
     } // putString( )
 
-final static int DOT_SIZE = 4;
-    private void drawDice(int roll, int x, int y, Color dicecolor, Color dotcolor) {
-        g_buffer.setColor(dicecolor);
-        g_buffer.fill(new Rectangle2D.Double(x, y, 25, 25));
 
+     /**
+      * Driver, organizes data and color before calling general purpose "drawDice"
+      */
+    private void drawCurrentDice( ) {
+        int dice1x = GUI_Dim.DICE1_LEFT;
+        int dice2x = GUI_Dim.DICE2_LEFT;
+        int diceTop = GUI_Dim.DICE_TOP;
+        Color diceColor, dotColor;
+        if (currentPlayer==black) {
+            diceColor = myBoardPict.clr_black;
+            dotColor = myBoardPict.clr_white;
+        } else {
+            diceColor = myBoardPict.clr_white;
+            dotColor = myBoardPict.clr_black;
+        }
+        drawDice(myBoard.myDice.getDie(1), dice1x, diceTop,  diceColor, dotColor);
+        drawDice(myBoard.myDice.getDie(2), dice2x, diceTop,   diceColor, dotColor);
+    } /* drawCurrentDice( ) */
+
+
+    /**
+     * Called by "drawCurrentDice( )"
+     */
+    private void drawDice(int roll, int x, int y, Color dicecolor, Color dotcolor) {
+         int diceSize = GUI_Dim.DICE_SIZE; /* 25 */
+        int dotSize = GUI_Dim.DOT_SIZE; /* 4 */
+        int leftX = GUI_Dim.DICE_MARGIN; /* 2 */
+        int topY = leftX;   /* 2 */
+        int midX = (diceSize / 2) - GUI_Dim.DICE_MARGIN; /* 11 */
+        int midY = midX;
+        int rightX = 2 + (2 * (midX - leftX)); /* trying to evenly space. was 19, 20 ugly, trying 22 */
+        int lowY = rightX;
+        
+        g_buffer.setColor(dicecolor);
+        g_buffer.fill(new Rectangle2D.Double(x, y, diceSize, diceSize ));
         g_buffer.setColor(dotcolor);
 
         switch(roll) {
         case 1:
-            g_buffer.fill(new Rectangle2D.Double(x+11, y+11, myBoardPict.DOT_SIZE, myBoardPict.DOT_SIZE));
+            g_buffer.fill(new Rectangle2D.Double(x+midX, y+midY, dotSize, dotSize));
             break;
         case 2:
-            g_buffer.fill(new Rectangle2D.Double(x+2, y+2, myBoardPict.DOT_SIZE, myBoardPict.DOT_SIZE));
-            g_buffer.fill(new Rectangle2D.Double(x+19, y+19, myBoardPict.DOT_SIZE, myBoardPict.DOT_SIZE));
+            g_buffer.fill(new Rectangle2D.Double(x+leftX, y+topY, dotSize, dotSize));
+            g_buffer.fill(new Rectangle2D.Double(x+rightX, y+lowY, dotSize, dotSize));
             break;
         case 3:
-            g_buffer.fill(new Rectangle2D.Double(x+2, y+2, myBoardPict.DOT_SIZE, myBoardPict.DOT_SIZE));
-            g_buffer.fill(new Rectangle2D.Double(x+11, y+11, myBoardPict.DOT_SIZE, myBoardPict.DOT_SIZE));
-            g_buffer.fill(new Rectangle2D.Double(x+19, y+19, myBoardPict.DOT_SIZE, myBoardPict.DOT_SIZE));
+            g_buffer.fill(new Rectangle2D.Double(x+leftX, y+topY, dotSize, dotSize));
+            g_buffer.fill(new Rectangle2D.Double(x+midX, y+midY, dotSize, dotSize));
+            g_buffer.fill(new Rectangle2D.Double(x+rightX, y+lowY, dotSize, dotSize));
             break;
         case 4:
-            g_buffer.fill(new Rectangle2D.Double(x+2, y+2, myBoardPict.DOT_SIZE, myBoardPict.DOT_SIZE));
-            g_buffer.fill(new Rectangle2D.Double(x+19, y+19, myBoardPict.DOT_SIZE, myBoardPict.DOT_SIZE));
-            g_buffer.fill(new Rectangle2D.Double(x+19, y+2, myBoardPict.DOT_SIZE, myBoardPict.DOT_SIZE));
-            g_buffer.fill(new Rectangle2D.Double(x+2, y+19, myBoardPict.DOT_SIZE, myBoardPict.DOT_SIZE));
+            g_buffer.fill(new Rectangle2D.Double(x+leftX, y+topY, dotSize, dotSize));
+            g_buffer.fill(new Rectangle2D.Double(x+rightX, y+lowY, dotSize, dotSize));
+            g_buffer.fill(new Rectangle2D.Double(x+rightX, y+topY, dotSize, dotSize));
+            g_buffer.fill(new Rectangle2D.Double(x+leftX, y+lowY, dotSize, dotSize));
             break;
         case 5:
-            g_buffer.fill(new Rectangle2D.Double(x+2, y+2, myBoardPict.DOT_SIZE, myBoardPict.DOT_SIZE));
-            g_buffer.fill(new Rectangle2D.Double(x+19, y+19, myBoardPict.DOT_SIZE, myBoardPict.DOT_SIZE));
-            g_buffer.fill(new Rectangle2D.Double(x+19, y+2, myBoardPict.DOT_SIZE, myBoardPict.DOT_SIZE));
-            g_buffer.fill(new Rectangle2D.Double(x+2, y+19, myBoardPict.DOT_SIZE, myBoardPict.DOT_SIZE));
-            g_buffer.fill(new Rectangle2D.Double(x+11, y+11, myBoardPict.DOT_SIZE, myBoardPict.DOT_SIZE));
+            g_buffer.fill(new Rectangle2D.Double(x+leftX, y+topY, dotSize, dotSize));
+            g_buffer.fill(new Rectangle2D.Double(x+rightX, y+lowY, dotSize, dotSize));
+            g_buffer.fill(new Rectangle2D.Double(x+rightX, y+topY, dotSize, dotSize));
+            g_buffer.fill(new Rectangle2D.Double(x+leftX, y+lowY, dotSize, dotSize));
+            g_buffer.fill(new Rectangle2D.Double(x+midX, y+midY, dotSize, dotSize));
             break;
         case 6:
-            g_buffer.fill(new Rectangle2D.Double(x+2, y+2, myBoardPict.DOT_SIZE, myBoardPict.DOT_SIZE));
-            g_buffer.fill(new Rectangle2D.Double(x+19, y+19, myBoardPict.DOT_SIZE, myBoardPict.DOT_SIZE));
-            g_buffer.fill(new Rectangle2D.Double(x+19, y+2, myBoardPict.DOT_SIZE, myBoardPict.DOT_SIZE));
-            g_buffer.fill(new Rectangle2D.Double(x+2, y+19, myBoardPict.DOT_SIZE, myBoardPict.DOT_SIZE));
-            g_buffer.fill(new Rectangle2D.Double(x+2, y+11, myBoardPict.DOT_SIZE, myBoardPict.DOT_SIZE));
-            g_buffer.fill(new Rectangle2D.Double(x+19, y+11, myBoardPict.DOT_SIZE, myBoardPict.DOT_SIZE));
+            g_buffer.fill(new Rectangle2D.Double(x+leftX, y+topY, dotSize, dotSize));
+            g_buffer.fill(new Rectangle2D.Double(x+rightX, y+lowY, dotSize, dotSize));
+            g_buffer.fill(new Rectangle2D.Double(x+rightX, y+topY, dotSize, dotSize));
+            g_buffer.fill(new Rectangle2D.Double(x+leftX, y+lowY, dotSize, dotSize));
+            g_buffer.fill(new Rectangle2D.Double(x+leftX, y+midY, dotSize, dotSize));
+            g_buffer.fill(new Rectangle2D.Double(x+rightX, y+midY, dotSize, dotSize));
             break;
         }
     } // drawDice( )
 
-//final static int POINT_WIDTH = 30;
-//final static int POINT_HEIGHT = 160;
+
     /**
     * drawTriangle: Draws a triangle with the point facing downward, 
     * x,y gives left corner coordinates and a number for color.
@@ -1060,9 +1108,11 @@ final static int DOT_SIZE = 4;
         // Set the green color
         g_buffer.setColor(new Color(0 , 150, 0));
 
-        // Draw the two halves of the board
-        Rectangle2D.Double halfBoardA = new Rectangle2D.Double(LEFT_MARGIN, TOP_MARGIN, 192, 360);
-        Rectangle2D.Double halfBoardB = new Rectangle2D.Double(LEFT_MARGIN+238, TOP_MARGIN, 192, 360);
+        // Draw the two (left & right) halves of the board
+        Rectangle2D.Double halfBoardA 
+          = new Rectangle2D.Double(LEFT_MARGIN, TOP_MARGIN, BoardPict.QUADRANT_WIDTH + 2/*192*/, BoardPict.BOARD_HEIGHT/*360*/);
+        Rectangle2D.Double halfBoardB 
+          = new Rectangle2D.Double(LEFT_MARGIN+BoardPict.BOARD_MIDPOINT_HORIZONTAL_PIXELS/*238*/, TOP_MARGIN, BoardPict.QUADRANT_WIDTH + 2/*192*/, BoardPict.BOARD_HEIGHT/*360*/);
 
         g_buffer.draw(halfBoardA);
         g_buffer.fill(halfBoardA);
@@ -1071,7 +1121,8 @@ final static int DOT_SIZE = 4;
 
         // Draw the bar
         g_buffer.setColor(new Color(128,64,0)); /* brown? */
-        Rectangle2D.Double bar = new Rectangle2D.Double(LEFT_MARGIN+192, TOP_MARGIN, 46, 360);
+        Rectangle2D.Double bar = new Rectangle2D.Double(LEFT_MARGIN+BoardPict.QUADRANT_WIDTH + 2/*192*/, TOP_MARGIN, 
+           BoardPict.BAR_WIDTH-4/*46*/, BoardPict.BOARD_HEIGHT/*360*/);
         g_buffer.draw(bar);
         g_buffer.fill(bar);
 
@@ -1079,7 +1130,7 @@ final static int DOT_SIZE = 4;
         int point_color = white;
 
         // Draw the points
-        for (int i=0; i<=180; i+=32) {
+        for (int i=0; i<=BoardPict.QUADRANT_WIDTH - 10/*180*/; i+=(BoardPict.POINT_WIDTH+2)/*32*/) {
             if (point_color == neutral) {
                 point_color = white;
             } else {
@@ -1087,10 +1138,10 @@ final static int DOT_SIZE = 4;
             }
 
             drawTriangle(LEFT_MARGIN+i, TOP_MARGIN, point_color);
-            drawTriangleRev(LEFT_MARGIN+i, TOP_MARGIN+360, point_color);
+            drawTriangleRev(LEFT_MARGIN+i, TOP_MARGIN+BoardPict.BOARD_HEIGHT/*360*/, point_color);
 
             drawTriangle(LEFT_MARGIN+240+i, TOP_MARGIN, point_color);
-            drawTriangleRev(LEFT_MARGIN+240+i, TOP_MARGIN+360, point_color);
+            drawTriangleRev(LEFT_MARGIN+240+i, TOP_MARGIN+BoardPict.BOARD_HEIGHT/*360*/, point_color);
         }
         debug_data("FINISHED THE SPIKES ",0);
     } // drawBoard( )
@@ -1098,87 +1149,96 @@ final static int DOT_SIZE = 4;
 
     private void drawBar() {
         g_buffer.setColor(new Color(100, 50, 0)); /* dark-brown? */
-        g_buffer.drawRect(LEFT_MARGIN+192,TOP_MARGIN+120,46,40);
-        g_buffer.fill(new Rectangle2D.Double(LEFT_MARGIN+192, TOP_MARGIN+120, 46, 40));
-        g_buffer.fill(new Rectangle2D.Double(LEFT_MARGIN+192, TOP_MARGIN+200, 46, 40));
+        int left = LEFT_MARGIN + BoardPict.barRect.x + 2 /*192*/;
+        int topBlack = TOP_MARGIN + BoardPict.BAR_BLACK_TOP; /* topmarg + 120 */
+        int topWhite = TOP_MARGIN + BoardPict.BAR_WHITE_TOP; /* topmarg + 200 */
+        g_buffer.drawRect(left,topBlack/*?*/,BoardPict.BAR_WIDTH - 4,BoardPict.BAR_ZONE_HEIGHT);
+        g_buffer.fill(new Rectangle2D.Double(left, topBlack, BoardPict.BAR_WIDTH - 4, BoardPict.BAR_ZONE_HEIGHT));
+        g_buffer.fill(new Rectangle2D.Double(left, topWhite, BoardPict.BAR_WIDTH - 4, BoardPict.BAR_ZONE_HEIGHT));
 
         g_buffer.setColor(Color.WHITE);
-        g_buffer.fill(new Rectangle2D.Double(LEFT_MARGIN+192, TOP_MARGIN+160, 47, 40));
-
-        if (myBoard.onBar(white)) {
-            g_buffer.setColor(myBoardPict.clr_white);
-            g_buffer.fill(new Ellipse2D.Double(LEFT_MARGIN+201, TOP_MARGIN+205, 29, 29));
-            if (myBoard.white_bar>1) {
-                putString(String.valueOf(myBoard.white_bar), /*X:*/232, /*Y:*/285, Color.RED, /*fontsize:*/15);
-            }
-        }
+        g_buffer.fill(new Rectangle2D.Double(left, (topBlack+topWhite)/2, BoardPict.BAR_WIDTH - 3, BoardPict.BAR_ZONE_HEIGHT));
+        left = LEFT_MARGIN + BoardPict.barRect.x + BoardPict.BAR_MARGIN_TO_BLOT; /* 201 */
+        int blotSize = BoardPict.BLOT_WIDTH; /* 29 */
 
         if (myBoard.onBar(black)) {
             g_buffer.setColor(myBoardPict.clr_black);
-            g_buffer.fill(new Ellipse2D.Double(LEFT_MARGIN+201, TOP_MARGIN+125, 29, 29));
-            if (myBoard.black_bar>1) {
-                putString(String.valueOf(myBoard.black_bar), /*X:*/232, /*Y:*/205, Color.RED, /*fontsize:*/15);
+            g_buffer.fill(new Ellipse2D.Double(left, topBlack + 5, blotSize, blotSize));
+            if (myBoard.black_bar > 1) {
+                putString(String.valueOf(myBoard.black_bar), /*X:*/left+21, /*Y:*/topBlack + 85, Color.RED, /*fontsize:*/15);
             }
         }
+        
+        if (myBoard.onBar(white)) {
+            g_buffer.setColor(myBoardPict.clr_white);
+            g_buffer.fill(new Ellipse2D.Double(left, topWhite + 5, blotSize, blotSize));
+            if (myBoard.white_bar > 1) {
+                putString(String.valueOf(myBoard.white_bar), /*X:*/left+21, /*Y:*/topWhite + 85, Color.RED, /*fontsize:*/15);
+            }
+        }
+
     } // drawBar( )
 
 
-    private void drawMen() {
-        debug_msg("drawMen()");
+    private void drawBlots() {
+        debug_msg("drawBlots()");
+         int blotSize = BoardPict.BLOT_WIDTH; /* 29 */
+
         for (int point=1; point<=12; point++) {
-            if ( (myBoard.getHowManyBlotsOnPoint(point)>0) && (myBoard.getHowManyBlotsOnPoint(point)<6) ) {
-                for (int i=0; i<myBoard.getHowManyBlotsOnPoint(point); i++) {
+           int howManyBlots = myBoard.getHowManyBlotsOnPoint(point);
+            if ( (0<howManyBlots) && (howManyBlots<=5) ) {
+                for (int i=0; i<howManyBlots; i++) {
                     if (myBoard.getColorOnPoint(point)==white) {
                         g_buffer.setColor(myBoardPict.clr_white);
                     } else {
                         g_buffer.setColor(myBoardPict.clr_black);
                     }
-                    g_buffer.fill(new Ellipse2D.Double(findX(point), findY(point) + i*30, 29, 29));
+                    g_buffer.fill(new Ellipse2D.Double(findX(point), findY(point) + i*30, blotSize, blotSize));
                 }
             }
-            if (myBoard.getHowManyBlotsOnPoint(point)>5) {
+            if (howManyBlots>5) {
                 for (int i=0; i<5; i++) {
                     if (myBoard.getColorOnPoint(point)==white) {
                         g_buffer.setColor(myBoardPict.clr_white);
                     } else {
                         g_buffer.setColor(myBoardPict.clr_black);
                     }
-                    g_buffer.fill(new Ellipse2D.Double(findX(point), findY(point) + i*30, 29, 29));
+                    g_buffer.fill(new Ellipse2D.Double(findX(point), findY(point) + i*30, blotSize, blotSize));
                 }
-                putString(String.valueOf(myBoard.getHowManyBlotsOnPoint(point))
+                putString(String.valueOf(howManyBlots)
                    , /*X:*/findX(point)+10, /*Y:*/235, Color.RED, /*fontsize:*/15);
             }
         } // for point 1..12
 
         for (int point=13; point<=24; point++) {
-            if ((myBoard.getHowManyBlotsOnPoint(point)>0) && (myBoard.getHowManyBlotsOnPoint(point)<6)) {
-                for (int i=0; i<myBoard.getHowManyBlotsOnPoint(point); i++) {
+            int howManyBlots = myBoard.getHowManyBlotsOnPoint(point);
+            if ((0<howManyBlots) && (howManyBlots<=5)) {
+                for (int i=0; i<howManyBlots; i++) {
                     if (myBoard.getColorOnPoint(point)==white) {
                         g_buffer.setColor(myBoardPict.clr_white);
                     } else {
                         g_buffer.setColor(myBoardPict.clr_black);
                     }
-                    g_buffer.fill(new Ellipse2D.Double(findX(point), findY(point) - 30 - i*30, 29, 29));
+                    g_buffer.fill(new Ellipse2D.Double(findX(point), findY(point) - 30 - i*30, blotSize, blotSize));
                 }
             }
-            if (myBoard.getHowManyBlotsOnPoint(point)>5) {
+            if (howManyBlots>5) {
                 for (int i=0; i<5; i++) {
                     if (myBoard.getColorOnPoint(point)==white) {
                         g_buffer.setColor(myBoardPict.clr_white);
                     } else {
                         g_buffer.setColor(myBoardPict.clr_black);
                     }
-                    g_buffer.fill(new Ellipse2D.Double(findX(point), findY(point) - 30 - i*30, 29, 29));
+                    g_buffer.fill(new Ellipse2D.Double(findX(point), findY(point) - 30 - i*30, blotSize, blotSize));
                 }
                 /* note: findX can return -1 if it doesn't know the point */
-                putString(String.valueOf(myBoard.getHowManyBlotsOnPoint(point))
+                putString(String.valueOf(howManyBlots)
                    , /*X:*/findX(point)+10, /*Y:*/255, Color.RED, /*fontsize:*/15);
             }
         } // for point 13..24
-    } // drawMen( )
-
-final static int BOARD_MIDPOINT_VERTICAL_PIXELS = 200;
-final static int BOARD_MIDPOINT_HORIZONTAL_PIXELS = 238; /* is the bar before or after this?? */
+    } // drawBlots( )
+    
+    
     /**
      * This probably tells which point is touched by the x,y int coordinates
      */
@@ -1190,12 +1250,12 @@ final static int BOARD_MIDPOINT_HORIZONTAL_PIXELS = 238; /* is the bar before or
         debug_data("point_x = ",point_x);
         debug_data("point_y = ",point_y);
         // Find which portion of the board the click occurred in
-        if (point_y >= BOARD_MIDPOINT_VERTICAL_PIXELS) {
+        if (point_y >= BoardPict.BOARD_MIDPOINT_VERTICAL_PIXELS) {
             topHalf = false;
         }
 
-        if (point_x >= BOARD_MIDPOINT_HORIZONTAL_PIXELS) {
-            point_x -= BOARD_MIDPOINT_HORIZONTAL_PIXELS;
+        if (point_x >= BoardPict.BOARD_MIDPOINT_HORIZONTAL_PIXELS) {
+            point_x -=BoardPict.BOARD_MIDPOINT_HORIZONTAL_PIXELS;
             debug_data("point_x changed to ", point_x);
             leftHalf = false;
         }
@@ -1227,8 +1287,7 @@ final static int BOARD_MIDPOINT_HORIZONTAL_PIXELS = 238; /* is the bar before or
     } // getPointNum( )
 
 
-    public void debug_data( String msg, int data)
-    {
+    public void debug_data( String msg, int data) {
         /*
             System.out.print("DEBUG: ");
             System.out.print(msg);
@@ -1237,17 +1296,16 @@ final static int BOARD_MIDPOINT_HORIZONTAL_PIXELS = 238; /* is the bar before or
     } // debug_data( )
 
 
-    public void resetGame()
-    {
+    public void resetGame() {
         // System.out.println("GAME RESET WAS HIT");
         // Reset Game data /
         myBoard.myDice.reset( ); /* puts to unrolled, unused, countdown=0 */ 
         myBoard.setOldPoint( 0 );
-        /*myBoard.*/current_player = white;
+        currentPlayer = white;
     
         // Reset buttons
         FButton[btn_CancelMove].setEnabled(false);
-        FButton[btn_RollDice].setEnabled(false);
+        FButton[btn_RollDice].setEnabled(true); /* was false, why? Was this the reason new game didn't work? */
         FButton[btn_BearOff].setEnabled(false);
         FButton[btn_NewGame].setEnabled(false);
         FButton[btn_AtPotentialMove1].setVisible(false);

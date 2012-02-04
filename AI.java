@@ -44,7 +44,6 @@ public class AI
         /* Move gonnaMove = bestMoveOf( myMoves ); /* might be null */
         System.out.println(gonnaMove);
         
-        /* Dang: superMove wants to know which dice was used */
 //        for (PartialMove p : gonnaMove.getMyPartials()) {
 //            myGame.myBoard.handlePoint( p.getStart( )   );
 //            myGame.doPartialMove(p );

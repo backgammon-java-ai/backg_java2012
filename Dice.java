@@ -16,7 +16,7 @@ public class Dice
        Beware deep copy if the new fields hold (pointers to) objects! */
     private int[ ] dice = new int[howManyDice];
     /* beware! Outside world talks about getUsed(1) which refers to used[0], getUsed(2) means used[1], etc */
-    private boolean[ ] used = new boolean[maxMovesCount]; /* was called "used_move". */
+    private boolean[ ] used = new boolean[maxMovesCount]; /* was called "used_move". Too small for collection? */
     private int doubletMovesCountdown = 0; /* should be called howManyPartialMovesAvailable */
     
     /* old code for used: usedDice == 1 means first dice has been used
@@ -288,12 +288,11 @@ public class Dice
      * 
      */
     public void setUsedDie(int newUsedDie, boolean newUsedTF) {
-        /* since I'm hoping to replace this with an array soon, I'm just hard-coding the
-           temporary code's limits. */
-        if ( ! ((0<= newUsedDie) && (newUsedDie <= maxMovesCount)) ) {
+        /* Beware! Outside users talk about die1 and die2 while in here we say used[0] & used[1] */
+        if ( ! ((1<= newUsedDie) && (newUsedDie <= maxMovesCount)) ) {
             throw new IllegalArgumentException("bad newUsedDie '" + newUsedDie + "', should be 0, 1, or 2");
         }
-        used[newUsedDie] = newUsedTF;
+        used[newUsedDie-1] = newUsedTF;
     }
     
 
@@ -305,7 +304,7 @@ public class Dice
             dice[i] = UNROLLED;
         }
         rolled = false;
-        resetUsedDice( ); /* calls         resetDoubletMovesCountdown( ); */
+        resetUsedDice( ); /* calls   resetDoubletMovesCountdown( ); */
     }
     
     
@@ -372,7 +371,14 @@ public class Dice
         // for (int i=0; i<(howManyDice-1); ++i) { temp.append(dice[i] + ","; }
         // temp.append(dice[howManyDice-1] + "]");
         // return temp.toString( );
-        return "[" + dice[0] + "," + dice[1] + "]";
+        StringBuffer usedSB = new StringBuffer("[used:");
+        for (int i=0; i<maxMovesCount; ++i) {
+            if (used[i]) {
+                usedSB.append( i + " ");
+            }
+        }
+        usedSB.append("]");
+        return "[" + dice[0] + "," + dice[1] + "]" + usedSB.toString( );
     }
     
 } /* class Dice */

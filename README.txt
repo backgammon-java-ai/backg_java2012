@@ -53,9 +53,9 @@ Still not sure if point 25 is being used for anything. Program dies if it doesn'
 
 ...Bugs
 [ ]"New Game" button doesn't enable the "Roll Dice" button so white can't make her first move.
-[ ]White knocked black onto bar and the move didn't count, nor did its (how many?) successors, so white 
-got subsequent infinite (or 4?) free moves!
-[ ]White was able to use die1 twice, even though not doubles, so I suspect "usedDice" isn't working right.
+[ ]There might be big trouble in Game.doMove( ) which I've been messing with. Does anybody call it?
+Does anybody ever endTurn( )?
+[ ]Black can't come in from bar: AI error: java.lang.IllegalArgumentException: bad pointNum '-100'
 [ ]Black can't come in from bar: blot disappears
 [ ]White can't bear off past exact roll, infinite loop: "java.lang.StackOverflowError
 ...	at Board.canLandOn(Board.java:1768)
@@ -66,15 +66,30 @@ got subsequent infinite (or 4?) free moves!
 [ ]Computer is getting itself stuck trying to bear off (but can't) when other blots are lagging behind. 
 Maybe white can't bear off either, probably bug in handlePoint calling canLandOn calling canLandOnExact
 calling getHowManyBlotsOnBoard with pointNum '100' (WHITE_PAST_BEAR_OFF_LOC)
+AI error: java.lang.IllegalArgumentException: bad pointNum '-100'
+$
+java.lang.IllegalArgumentException: bad pointNum '-100'
+	at Board.canLandOn(Board.java:1760)
+	at Board.canMove(Board.java:1840)
+	at Board.doPartialMove(Board.java:1740)
 [ ]AI can't come in from bar ("java.lang.IllegalArgumentException: Can't start moving from point '25'
 	at Board.doPartialMove(Board.java:1681)
 	at Game.actionPerformed(Game.java:764)"
-[ ]When AI moves itself, it is bearing off before it is legal! Wassup?
+[ ]When AI moves itself, it is bearing off before it is legal! Wassup? Wait, now it tries to bear off 
+before lower blots have caught up, and with 2 dice rolls, it took the higher:
+in board.allLegalPartialMoves( ), the moveableBlotLocs==[3, 20]
+for starting at 3 with roll:2 estimated move to:1
+AI error: java.lang.IllegalArgumentException: [bad PartialMove start:3 roll:6 end:-100 color:2 whichDie:2]
+
 [ ]Rather than merely summing up the values of the blots that are on points, also sum up how
 much risk there is of exposed blots (of either color) ACTUALLY getting hit.
 [x]Why is "allLegalPartials" printing ALL of them twice? Is its arraylist double booked? 
 They're in the same order, but could it be pt1moves5+pt1moves2, pt1moves2+pt1moves5 ??
 Nevermind, another method was printing.
+[x]White was able to use die1 twice, even though not doubles, so I suspect "usedDice" isn't working right. 
+[x]White knocked black onto bar and the move didn't count, nor did its (how many?) successors, so white 
+got subsequent infinite (or 4?) free moves!
+Fixed: obob in setUsed( ).
 
 
 ...High priority

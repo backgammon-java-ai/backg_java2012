@@ -5,7 +5,7 @@ Copyright (C) 2002
 George Vulov <georgevulov@hotmail.com>
 Cody Planteen <frostgiant@msn.com>
  
-revised by Mike Roam, 2011
+revised by Julien S., Joshua G., Mike Roam, 2011-2
 
 
 This program is free software; you can redistribute it and/or modify
@@ -41,7 +41,7 @@ public class Board {
 
     Game myGame = null; /* better be set up in constructor or die! */
     
-    int howManyOnPoint[ ];
+    int howManyOnPoint[ ]; /* just for board points (1..24), Beware: numbered 1..24, NOT 0..23! */
     int whichColorOnPoint[ ];
 
     int white_bar = 0; /* how many blots on white's bar */
@@ -49,11 +49,7 @@ public class Board {
     int white_bear = 0; /* how many blots white has "beared off" the board */
     int black_bear = 0;
     
-//    boolean rolled = false;    now part of myDice
     Dice myDice = new Dice( );
-
-    // now incorporated into myDice!!
-//    int doubletMovesCountdown; /* when we roll doubles, this gets set to 4 for counting off moves that have been used */
 
     // The move possible with each dice
     // Positions: 1 - 24 = points, 1 being on the beginning of the black quarter
@@ -83,9 +79,10 @@ public class Board {
   //  public static final int bearoff = -1; /* a move might end on here */
     public static final int howManyPoints = 24; /* points are "spikes"; stored in array 0..24 just using 1..24 */
     public static final int howManyPointsInBearOffZone = 6;
-    public static final int startOfWhiteBearOffZone = howManyPoints - (howManyPointsInBearOffZone - 1); /* points 19-24 are white's final quadrant*/
+         /* points 19-24 are white's #4 (final) quadrant*/
+    public static final int startOfWhiteBearOffZone = howManyPoints - (howManyPointsInBearOffZone - 1); 
     public static final int endOfWhiteBearOffZone = howManyPoints;
-    public static final int startOfBlackBearOffZone = 1; /* points 1-6 are black's final quadrant */
+    public static final int startOfBlackBearOffZone = 1; /* points 1-6 are black's #4 (final) quadrant */
     public static final int endOfBlackBearOffZone = startOfBlackBearOffZone + (howManyPointsInBearOffZone - 1);
     public static final int howManyBlots = 15;
     public static final int howManyWhiteBlots = howManyBlots; /* some might be on bar or did bear off */
@@ -172,11 +169,11 @@ public class Board {
      
     
     /**
-    * The regular starting position (15 blots of each color)
+    * The regular normal starting position (15 blots of each color)
     */
     public void makeStartingBoard( )  throws BadBoardException {
         makeBoardWithoutBlots( );
-        setPoint(1, /* howMany */ 2, white); /* used to be 2 */
+        setPoint(1, /* howMany */ 2, white);
         setPoint(6, /* howMany */ 5, black);
         setPoint(8, /* howMany */ 3, black);
         setPoint(12, /* howMany */ 5, white);
@@ -196,7 +193,7 @@ public class Board {
      */
     public void makeEasyHitStartingBoard( )  throws BadBoardException {
         makeBoardWithoutBlots( );
-        setPoint(1, /* howMany */ 1, white); /* used to be 2 */
+        setPoint(1, /* howMany */ 1, white); 
         setPoint(6, /* howMany */ 1, black);
         setPoint(8, /* howMany */ 1, black);
         setPoint(12, /* howMany */ 1, white);
@@ -220,7 +217,7 @@ public class Board {
      */
     public void makeAlmostDoneGame( ) throws BadBoardException {
         makeBoardWithoutBlots( );
-        setPoint(1, /* howMany */ 2, black); /* used to be 2 */
+        setPoint(1, /* howMany */ 2, black); 
         setPoint(5, /* howMany */ 5, black);
         setPoint(6, /* howMany */ 3, black);
         black_bear = 5;
@@ -284,21 +281,25 @@ public class Board {
             if ((playerColor==black) && (black_bar > 0)) {
                 black_bar--;
             } else if (playerColor!=white) {
-                throw new IllegalArgumentException("color '" + colorName( playerColor ) + "' isn't black so can't move from BLACK_BAR_LOC.");
+                throw new IllegalArgumentException("color '" + colorName( playerColor ) 
+                    + "' isn't black so can't move from BLACK_BAR_LOC.");
             } else if (white_bar <= 0) {
-                throw new IllegalArgumentException("player '" + colorName( playerColor ) + "' can't move from BLACK_BAR_LOC since no blots are there!");
+                throw new IllegalArgumentException("player '" + colorName( playerColor ) 
+                    + "' can't move from BLACK_BAR_LOC since no blots are there!");
             }
         } else {
             // Move is coming from another point
             // Decrease the number of blots on the old point
             int howManyOnOldPoint = getHowManyBlotsOnPoint(old_pos);
             if (howManyOnOldPoint > 0) {
+                   // could use "takeOneBlotOffPoint(old_pos)" but why 
                 setPoint(old_pos, howManyOnOldPoint - 1, playerColor);
                 if (howManyOnOldPoint==0) {
                     setPoint(old_pos, 0, neutral);
                 }
             } else {
-                throw new IllegalArgumentException("player '" + colorName( playerColor ) + "' can't move from point '" + old_pos + "' since no blots are there!");
+                throw new IllegalArgumentException("player '" + colorName( playerColor ) + "' can't move from point '" 
+                    + old_pos + "' since no blots are there!");
             }
             // Increase the blots on the new point
             setPoint(newPointNum, getHowManyBlotsOnPoint(newPointNum) + 1, playerColor);
@@ -307,14 +308,20 @@ public class Board {
 
     
    /**
-    * Bear off a blot from the current point (aka "old_point")
+    * Bear off a blot from the current point (aka "old_point").
+    * Sure hope that the caller has checked legitimacy of bearing off!
     */
     public void bearOff( int playerColor) {
         if ( ! legitPlayerColor(playerColor) ) {
             throw new IllegalArgumentException("bad playerColor '" + playerColor + "'");
         }
+        if ( 4 != quadrantForPoint(old_point, playerColor )) {
+            throw new IllegalArgumentException("can't bear off from point '" + old_point 
+               + "' which isn't in final quadrant for player " + colorName(playerColor));
+        }
         // Remove a blot from the old point
-        setPoint(old_point, getHowManyBlotsOnPoint(old_point,playerColor) - 1, playerColor);
+        takeOneBlotOffPoint(old_point);
+        // setPoint(old_point, getHowManyBlotsOnPoint(old_point,playerColor) - 1, playerColor);
         if (playerColor==white) {
             white_bear++;
         } else {
@@ -342,18 +349,15 @@ public class Board {
         // Remove the dice we used
         if (!myDice.isDoubles( )) {
             // if a previous move has already occurred, we are done
-            if ((myDice.getUsedDie(1 )) || (myDice.getUsedDie(2))) {
-            /* note: these are a code: usedDice == 1 means first dice has been used
-             * usedDice == 2 means second dice has been used
-             * usedDice == 0 means no die have been used yet */
+            if ((myDice.getUsedDie(1)) || (myDice.getUsedDie(2))) {
                 myGame.endTurn();
             } else {
                 // if you can bear off with both, use smaller dice
                 if (((potDest1==WHITE_BEAR_OFF_LOC)||(potDest1==BLACK_BEAR_OFF_LOC)) && ((potDest1==WHITE_BEAR_OFF_LOC)||(potDest1==BLACK_BEAR_OFF_LOC))) {
                     if (myDice.getDie(1) > myDice.getDie(2)) {
-                        myDice.setUsedDie( 2,true );
+                        myDice.setUsedDie(2,true );  // I see a Die being marked, but when is move happening??
                     } else {
-                        myDice.setUsedDie( 1,true );
+                        myDice.setUsedDie(1,true );
                     }
                 } else if ((potDest1==WHITE_BEAR_OFF_LOC)||(potDest1==BLACK_BEAR_OFF_LOC)) {
                     myDice.setUsedDie( 1,true );
@@ -362,8 +366,8 @@ public class Board {
                 }
             }
         } else if (myDice.isDoubles( )) {
-            myDice.doubletCountdown(); /* this should be part of myDice?? */
-            if (myDice.getDoubletMovesCountdown( )==0) {
+            myDice.doubletCountdown();
+            if (myDice.getDoubletMovesCountdown( )<=0) {
                 myGame.endTurn();
             }
         }
@@ -771,8 +775,29 @@ public class Board {
     } // getHowManyBlotsOnPoint( )
 
 
-
-
+    /**
+     * Convenience method
+     * What to do if there are no blots on the specified point? Uh-oh.
+     * This is only for points on the board (1..24), and maybe bar?
+     */
+    public void takeOneBlotOffPoint( int startPointNum) {
+        int playerColor;
+        if (startPointNum == WHITE_BAR_LOC) {
+            playerColor = white;
+        } else if (startPointNum == BLACK_BAR_LOC) {
+            playerColor = black;
+        } else if (! legitPointNum(startPointNum)) {
+             throw new IllegalArgumentException("Bad PointNum '" + startPointNum + "'");
+        } else {
+            playerColor = getColorOnPoint(startPointNum);
+        }
+        int howMany = getHowManyBlotsOnPoint(startPointNum);
+        if (howMany < 1) {
+            throw new IllegalArgumentException("Can't remove a blot from point '" 
+               + startPointNum + "' which has no blots!");
+        }
+        setPoint( startPointNum, howMany - 1, playerColor);
+    } /* takeOneBlotOffPoint( ) */
 
 
     /**
@@ -787,12 +812,13 @@ public class Board {
         }
         if (color == neutral) {
             if (howMany != 0) {
-                throw new IllegalArgumentException("Bad color: Can't put " + howMany + " 'neutral' blots anywhere!");
+                throw new IllegalArgumentException("Bad color: Can't put " + howMany 
+                    + " 'neutral' blots anywhere!");
             } else {
                 howManyOnPoint[destPointNum] = 0;
                 whichColorOnPoint[destPointNum] = neutral;
             }
-        } else if ( ! legitEndLoc(destPointNum, color )) {
+        } else if ( ! legitEndLoc(destPointNum, color )) { /* checks that color is black or white */
             throw new IllegalArgumentException("Bad destPointNum '" + destPointNum + "' in setPoint( )");
         } else if ( (howMany < 0) || (howMany > howManyBlots) ) {
             /* ******* Hey, should we check that there are legit num of blots on board?? No,
@@ -800,7 +826,8 @@ public class Board {
             of blots yet.
             But there's never any excuse for putting a negative number of blots onto a point,
             and no excuse for putting more than "howManyBlots" (aka 15) blots onto a point. */
-            throw new IllegalArgumentException("Bad number '" + howMany + "' of blots in setPoint( ), should be in range [0.." + howManyBlots + "]");
+            throw new IllegalArgumentException("Bad number '" + howMany 
+                + "' of blots in setPoint( ), should be in range [0.." + howManyBlots + "]");
         } else if ((howMany > 0) && ( ! legitPlayerColor(color) )) {
             throw new IllegalArgumentException("Bad color '" + color + "' for blots");
         } else {
@@ -828,7 +855,8 @@ public class Board {
              throw new IllegalArgumentException("Bad pointNum '" + pointNum + "'in moveToBar!");
         }
         if (getColorOnPoint(pointNum)!=bounceeColor) {
-            throw new IllegalArgumentException("There's no " + colorName(bounceeColor) + " blot on point '" + pointNum + "' to move to bar!");
+            throw new IllegalArgumentException("There's no " + colorName(bounceeColor) 
+                + " blot on point '" + pointNum + "' to move to bar!");
         }
         if (getColorOnPoint(pointNum)==white) {
             white_bar++;
@@ -841,7 +869,8 @@ public class Board {
             setPoint(pointNum, /* howMany */ 0, neutral);   
             /* doesn't seem redundant from setPoint( ) which calls moveToBar(), but I wonder ?? */
         } else {
-            throw new IllegalArgumentException("Error, can only send single blot from point " + pointNum + " to bar, but it has " + howManyBlotsOnThisPoint + " blots!");
+            throw new IllegalArgumentException("Error, can only send single blot from point " 
+                + pointNum + " to bar, but it has " + howManyBlotsOnThisPoint + " blots!");
         }
     } // moveToBar
 
@@ -861,7 +890,7 @@ public class Board {
         }
         int pipcount = 0;
 
-        for (int i=1; i<=howManyPoints; i++)   /* used to be i<25 */{
+        for (int i=1; i<=howManyPoints; i++) {
             if (playerColor == black) {
                 pipcount += getHowManyBlotsOnPoint(i, playerColor) * i;
             } else if (playerColor == white) {
@@ -890,7 +919,7 @@ public class Board {
     public int getBlackPipCount( ) {
         int pipcount = 0;
 
-        for (int i=1; i<=howManyPoints; i++)   /* used to be i<25 */{
+        for (int i=1; i<=howManyPoints; i++)  {
             pipcount += getHowManyBlotsOnPoint(i, black) * i;
         }
         /* blots on the bar are 25 moves away from bearing off */
@@ -960,7 +989,8 @@ public class Board {
             }
         }
         
-        System.out.println("There are " + howManyUnprotected + " unprotected " + colorName( playerColor ) + " points on the board.");
+        System.out.println("There are " + howManyUnprotected + " unprotected " 
+             + colorName( playerColor ) + " points on the board.");
         return howManyUnprotected;
     } // getHowManyUnprotected
     
@@ -975,13 +1005,14 @@ public class Board {
     public int getHowManyProtected(int playerColor ) {
         int howManyProtected = 0;
 
-        for (int i=1; i<=howManyPoints; i++)   /* used to be i<25 */ {
+        for (int i=1; i<=howManyPoints; i++)  {
             if (getHowManyBlotsOnPoint(i,playerColor) > 1) {
                 howManyProtected++; /* where they are ought to matter also */
             }
         }
         
-        System.out.println("There are " + howManyProtected + " protected " + colorName( playerColor ) + " points on the board.");
+        System.out.println("There are " + howManyProtected + " protected " 
+            + colorName( playerColor ) + " points on the board.");
         return howManyProtected;
     } // getHowManyUnprotected
 
@@ -1003,11 +1034,12 @@ public class Board {
              /* if ((getColorOnPoint(i)==color)  && (getHowManyBlotsOnPoint(i) > 1)) { */
              int howManyMyBlots = howMuchProtected( i, playerColor);
              if (howManyMyBlots > 1) {
-                 score = score + (howImportantIsThisPoint( i, playerColor, playerCautious) * howManyMyBlots);
-              }
+                 score+= (howImportantIsThisPoint( i, playerColor, playerCautious) * howManyMyBlots);
+            }
          }
          
-         System.out.println("There are " + score + " worth of protected " + colorName( playerColor ) + " points on the board.");
+         System.out.println("There are " + score + " worth of protected " 
+             + colorName( playerColor ) + " points on the board.");
          return score;
      } /* getAllPointScore( ) */
      
@@ -1037,7 +1069,8 @@ public class Board {
         
         double value = 0;
         if  (pointNum == WHITE_BAR_LOC) {
-            /* How to calculate the importance of the bar?? Varies in course of game. Is a long pip count from bearing out.   */
+            /* How to calculate the importance of the bar?? Varies in course of game. 
+                Is a long pip count from bearing out.   */
             if ( playerColor == white) {
                 value = howManyOnBar(playerColor) * -1.5; /* players are unhappy when they're on the bar */
             } else {
@@ -1046,7 +1079,8 @@ public class Board {
             return value;
         }
         if  (pointNum == BLACK_BAR_LOC) {
-            /* How to calculate the importance of the bar?? Varies in course of game. Is a long pip count from bearing out.   */
+            /* How to calculate the importance of the bar?? Varies in course of game. 
+                Is a long pip count from bearing out.   */
             if ( playerColor == black) {
                 value = howManyOnBar(playerColor) * -1.5; /* players are unhappy when they're on the bar */
             } else {
@@ -1055,7 +1089,8 @@ public class Board {
             return value;
         }
 
-        /* Use 'ourPointNum' (switched to white point of view). Don't use "pointNum" if calculating black's board value!! */
+        /* Use 'ourPointNum' (switched to white point of view). 
+        Don't use "pointNum" if calculating black's board value!! */
         switch(ourPointNum) {
          case  6: value = 24.0; break;
          case 23: value = 23.0; break;
@@ -1122,7 +1157,8 @@ public class Board {
          double theScore = 0;
          /* zero-sum game: we get happier from making the opponent unhappy! */
          /* but what "cautious" mood should we use when calculating opponent's board? */
-         theScore = getAllPointScore( playerColor, cautious )  - getAllPointScore( theReversePlayerColor( playerColor), cautious);
+         theScore = getAllPointScore( playerColor, cautious )  
+             - getAllPointScore( theReversePlayerColor( playerColor), cautious);
          /* change in opponent's pipcount? Not only that, but how important
             the point was to them that they lost: all contained in their AllPointScore */;         
          return theScore;
@@ -1167,7 +1203,7 @@ public class Board {
                 double thisWhiteBeHitProb = blackCanHitPointProb( pointNum );
                 int distanceFromStart = pointNum; /* bar is starting point */
                 int distanceToBearOff = 25 - pointNum;
-                int quadrantNumber = whatIsTheWhiteQuadrantForPoint( pointNum );
+                int quadrantNumber = quadrantForPoint( pointNum, white );
                 double thisProbScore = distanceFromStart * thisWhiteBeHitProb; /* ?? /* should this be linear?? */
                 whiteBeHit += thisProbScore;
             }
@@ -1178,26 +1214,32 @@ public class Board {
     
     public final static int HOW_MANY_POINTS_IN_QUADRANT = 6;
     /**
-     * White starts on 1 and ends on 25.
      * What are its 4 quadrants called? Perhaps 1..6 is q "1", 7..12 = q"2", etc?
      * What about bar and bear?
-     * Bar is quadrant 1?? Or Quadrants don't matter for bar?
+     * Bar is quadrant 1?? or 0?? Or Quadrants don't matter for bar?
+     * [ ]This would be better dividing by howManyPoints and taking floor?
      */
-    public int whatIsTheWhiteQuadrantForPoint( int pointNum ) throws ArrayIndexOutOfBoundsException {
-        if ((pointNum >= 0) && (pointNum <= 6)) {
-            return 1;
-        } else if ((pointNum >= 7) && (pointNum <= 12)) {
-            return 2;
-        } else if ((pointNum >= 13) && (pointNum <= 18)) {
-            return 3;
-        } else if ((pointNum >= 19) && (pointNum <= 24)) {
-            return 4;
-        } else if ( ! legitStartLoc(pointNum,white)) {
+    public int quadrantForPoint( int pointNum, int playerColor ) throws ArrayIndexOutOfBoundsException {
+        if ( ! legitStartLoc(pointNum,playerColor)) { /* also checks legitPlayerColor( ) */
                 throw new ArrayIndexOutOfBoundsException( "Bad pointNum '" + pointNum + "'" );
-        } else {
-            return 1; // bad
         }
-    } // whiteQuadrantForPoint( )
+        /* so now we know we've got bar or point-on-board (1..24) */
+        int pointForMe = pointNum;
+        if (playerColor == black) {
+            pointForMe = (howManyPoints + 1) - pointNum;
+        }
+        if ((1<=pointNum) && (pointNum <= 6)) {
+            return 1;
+        } else if ((7<=pointNum) && (pointNum <= 12)) {
+            return 2;
+        } else if ((13<=pointNum) && (pointNum <= 18)) {
+            return 3;
+        } else if ((19<=pointNum ) && (pointNum <= 24)) {
+            return 4;
+        } else {
+            return 1; //or is bar quadrant "0"?
+        }
+    } // quadrantForPoint( )
     
     
     /**
@@ -1359,7 +1401,8 @@ public class Board {
     /**
      * Selects a point and shows the possible moves.
      *
-     * This happens when current player clicks one of her own blots: this calculates the potential moves (dest1 & dest2) 
+     * This happens when current player clicks one of her own blots: this calculates the potential 
+     * moves (dest1 & dest2) 
      * and displays the potential move buttons on the points that we can move this blot to.
      * Memorizes the clicked upon point as "old_point".
      * ?? Does this ensure that everybody is in from the bar?? No, "handleBar" does that and is called by Game.superMove
@@ -1397,31 +1440,31 @@ public class Board {
 //             } // player white/black
 
             // If a move is valid, enable the button to move to it. Perhaps this stuff should be in Game
-            if (canLandOn(potDest1,playerColor) && !myDice.getUsedDie( 1)) {
+            if ( (canLandOn(potDest1,playerColor)) && (! myDice.getUsedDie( 1))) {
                 if ((1 <= potDest1) && (potDest1 <= howManyPoints)) {
-                    myGame.FButton[myGame.btn_CancelMove].setEnabled(true); // cancel move
-                    myGame.FButton[myGame.btn_AtPotentialMove1].drawOnPoint(potDest1); // potential move 1
+                    myGame.FButton[myGame.btn_CancelMove].setEnabled(true);
+                    myGame.FButton[myGame.btn_AtPotentialMove1].drawOnPoint(potDest1);
                     myGame.status.point_selected = true;
                 } else {
                     // The possible move leads to bearing off
-                    myGame.FButton[myGame.btn_CancelMove].setEnabled(true); // cancel move
-                    myGame.FButton[myGame.btn_BearOff].setEnabled(true); // bear off
+                    myGame.FButton[myGame.btn_CancelMove].setEnabled(true); 
+                    myGame.FButton[myGame.btn_BearOff].setEnabled(true);
                     myGame.status.point_selected = true;
                 }
             } else {
                 potDest1 = ILLEGAL_MOVE;
             }// end if move1 is valid
             
-            if (canLandOn(potDest2,playerColor) && !myDice.getUsedDie( 2 )) {
+            if ( (canLandOn(potDest2,playerColor)) && (! myDice.getUsedDie( 2 ))) {
                 if ((1<= potDest2) && (potDest2 <= howManyPoints)) {
-                    myGame.FButton[myGame.btn_CancelMove].setEnabled(true); // cancel move
-                    myGame.FButton[myGame.btn_AtPotentialMove2].drawOnPoint(potDest2); // potential move 2
+                    myGame.FButton[myGame.btn_CancelMove].setEnabled(true);
+                    myGame.FButton[myGame.btn_AtPotentialMove2].drawOnPoint(potDest2);
                     myGame.status.point_selected = true;
                 } else {
                     // The possible move leads to bearing off
                     // if (potDest2 == WHITE_BEAR_OFF_LOC   or  BLACK_BEAR_OFF_LOC
-                    myGame.FButton[myGame.btn_CancelMove].setEnabled(true); // cancel move
-                    myGame.FButton[myGame.btn_BearOff].setEnabled(true); // bear off
+                    myGame.FButton[myGame.btn_CancelMove].setEnabled(true);
+                    myGame.FButton[myGame.btn_BearOff].setEnabled(true);
                     myGame.status.point_selected = true;
                 }
             } else {
@@ -1474,7 +1517,8 @@ public class Board {
         }
         System.out.println("in board.allLegalPartialMoves( ), the moveableBlotLocs==" + myPoints.toString( ));
         
-        ArrayList<PartialMove> bunchOfPartialMoves = new ArrayList<PartialMove>( );   /* for storing & returning a collection of "PartialMove"s */
+        ArrayList<PartialMove> bunchOfPartialMoves = new ArrayList<PartialMove>( );   
+             /* for storing & returning a collection of "PartialMove"s */
         /* Work through every point in myPoints */
         for (int myPoint : myPoints.myList ) {
             bunchOfPartialMoves.addAll( legalPartialMovesFromPoint(myPoint, playerColor) );
@@ -1492,25 +1536,28 @@ public class Board {
      * This is counting on the move math calculator (endPointMovingFrom:) to handle bar and bear properly!
      */
     ArrayList<PartialMove> legalPartialMovesFromPoint(int myPoint, int playerColor) {
-        handlePoint( myPoint, playerColor ); /* will discover the potential points we can move to: potDest1, potDest2.*/
+        handlePoint( myPoint, playerColor ); 
+             /* will discover the potential points we can move to: potDest1, potDest2.*/
         /* Since this is worried about "Partial" (one-step) moves, dice doubles aren't an issue. There's no potDest3,4. */
         int endPointA = potDest1; // better check not zero!
         int endPointB = potDest2;
         int dice1 = myDice.getDie(1);
         int dice2 = myDice.getDie(2);
         
-        ArrayList<PartialMove> bunchOfPartialMoves = new ArrayList<PartialMove>( );   /* for storing & returning a collection of "PartialMove"s */
-        if (! myDice.getUsedDie(1 ) ) {
+        ArrayList<PartialMove> bunchOfPartialMoves = new ArrayList<PartialMove>( );   
+                /* for storing & returning a collection of "PartialMove"s */
+        if (! myDice.getUsedDie(1) ) {
             int endPoint1 = /*Board.*/endPointMovingFrom(myPoint, dice1, playerColor, this);
             System.out.println("for starting at " + myPoint + " with roll:" + dice1 + " estimated move to:" + endPoint1);
             PartialMove fakePartialMove1 = new PartialMove( myPoint, dice1, endPoint1, myGame, playerColor, /* whichDie:*/ 1 );
             bunchOfPartialMoves.add(fakePartialMove1);
         }
         
-        if (! myDice.getUsedDie(2 )) {
+        if (! myDice.getUsedDie(2)) {
             /* building move2, should check whether it is legal */
-            int endPoint2 = /*Board.*/endPointMovingFrom(myPoint, dice2, playerColor, this /*myGame.getMyBoard( )*/);
-            PartialMove fakePartialMove2 = new PartialMove( myPoint, dice2, endPoint2, myGame, playerColor,/*whichDie:*/2 );           
+            int endPoint2 = endPointMovingFrom(myPoint, dice2, playerColor, this /*board*/);
+            PartialMove fakePartialMove2 
+               = new PartialMove( myPoint, dice2, endPoint2, myGame, playerColor,/*whichDie:*/2 );           
             bunchOfPartialMoves.add(fakePartialMove2);
         }
         System.out.println("in legalPartialMovesFromPoint(" + myPoint + "..), the bunchOfPartials=='" + bunchOfPartialMoves.toString( ) + "'");
@@ -1557,16 +1604,21 @@ public class Board {
         ArrayList<PartialMove> currentPartials = allLegalPartialMoves(playerColor );
         
         throw new NullPointerException( "allLegalMoves isn't built yet.");
-//         /* do something with every partial move: perhaps build a new board, and then if we still have more moves left,
+//         /* do something with every partial move: perhaps build a new board, 
+//           * and then if we still have more moves left,
 //          * ask that new board what its legal partial moves are and combine them with this currPartial. */ 
 //         /* Each "move" is a collection of partial moves */
 //         int endPoint1 = Board.endPointMovingFrom(newPoint1Start, dice1, playerColor, this);
-//         System.out.println("for starting at " + newPoint1Start + " with roll:" + dice1 + " estimated move to:" + endPoint1);
-//         PartialMove fakePartialMove1 = new PartialMove( newPoint1Start, dice1, endPoint1, myGame, playerColor, /* whichDie:*/ 1 );
+//         System.out.println("for starting at " + newPoint1Start + " with roll:" 
+//                 + dice1 + " estimated move to:" + endPoint1);
+//         PartialMove fakePartialMove1 
+//           = new PartialMove( newPoint1Start, dice1, endPoint1, myGame, playerColor, /*whichDie:*/1 );
 //         
 //         int endPoint2 = Board.endPointMovingFrom(newPoint2Start, dice2, playerColor, this);
-//         System.out.println("for starting at " + newPoint2Start + " with roll:" + dice2 + " estimated move to:" + endPoint2);
-//         PartialMove fakePartialMove2 = new PartialMove( newPoint2Start, dice2, endPoint2, myGame, playerColor, /*whichDie:*/2 );
+//         System.out.println("for starting at " + newPoint2Start + " with roll:" 
+//                  + dice2 + " estimated move to:" + endPoint2);
+//         PartialMove fakePartialMove2 
+//              = new PartialMove( newPoint2Start, dice2, endPoint2, myGame, playerColor, /*whichDie:*/2 );
 //         
 //         ArrayList<PartialMove> temp = new ArrayList<PartialMove>();
 //         temp.add(fakePartialMove1);
@@ -1575,9 +1627,11 @@ public class Board {
 //         
 //         /* building move2 */
 //         int endPoint3 = Board.endPointMovingFrom(newPoint3Start, dice1, playerColor, myGame.getMyBoard( ));
-//         PartialMove fakePartialMove3 = new PartialMove( newPoint3Start, dice1, endPoint3, myGame, playerColor,/*whichDie:*/1 );
+//         PartialMove fakePartialMove3 
+//              = new PartialMove( newPoint3Start, dice1, endPoint3, myGame, playerColor,/*whichDie:*/1 );
 //         int endPoint4 = Board.endPointMovingFrom(newPoint4Start, dice2, playerColor, myGame.getMyBoard( ));
-//         PartialMove fakePartialMove4 = new PartialMove( newPoint4Start, dice2, endPoint4, myGame, playerColor,/*whichDie:*/2  );
+//         PartialMove fakePartialMove4 
+//              = new PartialMove( newPoint4Start, dice2, endPoint4, myGame, playerColor,/*whichDie:*/2  );
 //        
 //         temp.clear( );
 //         temp.add(fakePartialMove3);
@@ -1615,10 +1669,10 @@ public class Board {
      * "whichDie" - which dice is being used, the first one or the second one.
      * 
      * calls "Board.moveBlot( )" method
-     * There is a "usedDice" field in myDice which says which partial moves 
+     * There is a "myDice.getUsedDice( )" which says which partial moves 
      * (corresponding to which dice) have been used. 
-     * (myDice.isDoubles( ); is true when doubles have been rolled, 
-     * and myDice.doubletMovesCountdown keeps track of 4 moves countdown)
+     * myDice.isDoubles( ); is true when doubles have been rolled, 
+     * and myDice.getDoubletMovesCountdown( ) keeps track of 4 moves countdown.
      * 
      * Note: if this is the final partial move, this switches players by calling Game.endTurn( )!
      */
@@ -1733,7 +1787,8 @@ public class Board {
             throw new IllegalArgumentException("bad pointNum '" + pointNum + "'");
         }
         
-        if ((pointNum == WHITE_PAST_BEAR_OFF_LOC) || (pointNum == BLACK_PAST_BEAR_OFF_LOC)) {
+        if ((pointNum == WHITE_PAST_BEAR_OFF_LOC) 
+             || (pointNum == BLACK_PAST_BEAR_OFF_LOC)) {
             return false;
         }
 
@@ -1760,7 +1815,8 @@ public class Board {
 
     /**
      * With the current rolls, can the user move anywhere?
-     * Beware: this calls "needsInexactRolls()" which can either call this canMove() or does its equivalent?? looping through all points
+     * Beware: this calls "needsInexactRolls()" which can either call 
+     * this canMove() or does its equivalent?? looping through all points
      * This will call canMoveExact( ), and if stuck then try canBearOff and needsInexactRolls
      */ 
     public boolean canMove( int playerColor) {
@@ -1776,26 +1832,38 @@ public class Board {
         for (int point = 1; point <= howManyPoints; point++) {
             // Only check points which contain the player's blots
             if (getColorOnPoint(point) == playerColor ) {
-                move1 = endPointMovingFrom(point, myDice.getDie(1 ), playerColor, this); // might return BLACK_PAST_BEAR_OFF_LOC
+                move1 = endPointMovingFrom(point, myDice.getDie(1 ), playerColor, this); 
+                       // might return BLACK_PAST_BEAR_OFF_LOC
                 move2 = endPointMovingFrom(point, myDice.getDie(2 ), playerColor, this);
                     //if (playerColor==white) { move1 = point + getDie(1); move2 = point + getDie(2);
                     //} else { move1 = point - getDie(1); move2 = point - getDie(2); }
-                if ( (canLandOn(move1, playerColor) && !myDice.getUsedDie( 1)) || (canLandOn(move2, playerColor) && !myDice.getUsedDie(2 ))) {
+                if ( (canLandOn(move1, playerColor) && (!myDice.getUsedDie( 1))) 
+                   || (canLandOn(move2, playerColor) && (!myDice.getUsedDie(2)))) {
                     return true;
                 }
                 // canLandOn() only allows bearing off with exact rolls.
-                // If the player has no other option, moving with a roll greater than needed to bear off is legal
+                // If the player has no other option, moving with a roll greater than needed to bear off is legal.
                 
-                //} else if ( (needsInexactRolls(playerColor)) && (move1 > 25 || move1 < 0 || move2 > 25 || move2 < 0)) { // White's bearOff move is 25, Black's is 0 
+                //} else if ( (needsInexactRolls(playerColor)) 
+                //   && (move1 > 25 || move1 < 0 || move2 > 25 || move2 < 0)) { 
+                     // White's bearOff move is 25, Black's is 0 
                 if (playerColor == white ) {
-                    if ((move1 == WHITE_BEAR_OFF_LOC) || (move2 == WHITE_BEAR_OFF_LOC)) { return true; }
-                    if ((needsInexactRolls(playerColor)) && (move1 == WHITE_PAST_BEAR_OFF_LOC) || (move1 == WHITE_PAST_BEAR_OFF_LOC)) {
+                    if ((move1 == WHITE_BEAR_OFF_LOC) || (move2 == WHITE_BEAR_OFF_LOC)) { 
+                        return true; 
+                    }
+                    /* are the parentheses right in the following?? */
+                    if ((needsInexactRolls(playerColor)) 
+                       && ((move1==WHITE_PAST_BEAR_OFF_LOC) || (move1==WHITE_PAST_BEAR_OFF_LOC))) {
                         return true;
                     }
                 }
                 if (playerColor == black ) {
-                    if ((move1 == BLACK_BEAR_OFF_LOC) || (move2 == BLACK_BEAR_OFF_LOC)) { return true; }
-                    if ((needsInexactRolls(playerColor)) && (move1 == WHITE_PAST_BEAR_OFF_LOC) || (move1 == WHITE_PAST_BEAR_OFF_LOC)) {
+                    if ((move1 == BLACK_BEAR_OFF_LOC) || (move2 == BLACK_BEAR_OFF_LOC)) { 
+                        return true; 
+                    }
+                    /* are the parentheses right in the following?? */
+                    if ((needsInexactRolls(playerColor))
+                      && ((move1==WHITE_PAST_BEAR_OFF_LOC) || (move1==WHITE_PAST_BEAR_OFF_LOC))) {
                         return true;
                     }
                 }
@@ -1831,7 +1899,8 @@ public class Board {
             if (getColorOnPoint(point) == playerColor ) {
                 move1 = endPointMovingFrom(point, myDice.getDie(1 ), playerColor, this); // might return BLACK_PAST_BEAR_OFF_LOC
                 move2 = endPointMovingFrom(point, myDice.getDie(2 ), playerColor, this);
-                if ( (canLandOnExact(move1, playerColor) && !myDice.getUsedDie( 1)) || (canLandOnExact(move2, playerColor) && !myDice.getUsedDie(2 ))) {
+                if ( ((canLandOnExact(move1, playerColor)) && (!myDice.getUsedDie( 1))) 
+                   || ((canLandOnExact(move2, playerColor)) && (!myDice.getUsedDie(2 ))) ) {
                     return true;
                 }
                 // canLandOnExact() only allows bearing off with exact rolls.
@@ -1857,7 +1926,8 @@ public class Board {
         }
         LocList myMovers = new LocList( );
         if ( /*myBoard.*/getBar( playerColor ) > 1) {
-            //System.out.println("I don't know how to calculate moves for blots waiting to come in from bar. Sorry. Fix me!");
+            //System.out.println("I don't know how to calculate moves for blots waiting to come in from bar." 
+            //    + "Sorry. Fix me!");
             if (playerColor == white) {
                 myMovers.myList.add(new Integer( Board.WHITE_BAR_LOC ));
             } else {
@@ -1865,7 +1935,8 @@ public class Board {
             }
             return myMovers;
             //if (canOnlyMoveFromBar( playerColor )) {
-                /* only thing we can do is move in from bar, so how to show that in a list: with a code number? Or a "PointLoc" class? */
+                /* only thing we can do is move in from bar, so how to show that in a list: 
+                with a code number? Or a "PointLoc" class? */
             //}
         }
         int move1, move2;
@@ -1880,14 +1951,14 @@ public class Board {
                 } else { move1 = point - dice1(); move2 = point - dice2();
                 }*/
                 /*
-                if ( (canLandOn(move1,playerColor) && myDice.getUsedDice( ) != 1) || (canLandOn(move2,playerColor) && myDice.getUsedDice( ) != 2))
+                if ( ((canLandOn(move1,playerColor)) && (! myDice.getUsedDice(1))) 
+                 || ((canLandOn(move2,playerColor)) && (! myDice.getUsedDice(2))) )
                 { return true; }
                 */
-
                 // canLandOn() only allows bearing off with exact rolls.
                 // If the player has no other option, moving with a roll 
                 // greater than needed to bear off is legal
-                // White's bearOff move is 25, Black's is 0 
+                // White's bearOff move was 25, Black's is 0 
                 /* else if (needsInexactRolls() && (move1 > 25 || move1 < 0 || move2 > 25 || move2 < 0))
                 { return true; } */
             }
