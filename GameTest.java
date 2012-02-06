@@ -13,9 +13,9 @@ import org.junit.Test;
  */
 public class GameTest
 {
-    private Game g;
-    private Board b;
-    private int ai = Board.black; /* playerColor */
+    Game g;
+    Board b;
+    int ai = Board.black; /* playerColor */
     
 
     /**
@@ -80,7 +80,7 @@ public class GameTest
         g = new Game();
         b = g.getMyBoard();
         try {
-            b.make3BlotGame( );
+            b.make3BlotGame( );/* black on 20 & 12 ends at 0, white on 4 ends past 24 */
             assertEquals(ai, b.getColorOnPoint(12));
         } catch(Exception e) {
             /* isn't there a way to test without catching exceptions? */
@@ -136,7 +136,7 @@ public class GameTest
         g = new Game(false);
         b = g.getMyBoard();
         try {
-            b.make3BlotGame( );
+            b.make3BlotGame( );/* black on 20 & 12 ends at 0, white on 4 ends past 24 */
             assertNotNull(b);
             b.myDice.roll(3, 6);
             g.setCurrentPlayer(ai);

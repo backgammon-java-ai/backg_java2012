@@ -240,9 +240,10 @@ public class Board {
     
   
      /** 
-     * black and white each have removed 14 blots already...
-     * note: white ends past 24, black ends below 1.
-     */
+      * black on 20 & 12, white on 4 (has long way to go)
+      * note: white ends past 24, black ends below 1.
+      * black has beared off 13 blots, white has beared off 14 blots already...
+      */
     public void make3BlotGame( ) throws BadBoardException {
         makeBoardWithoutBlots( );
         setPoint(20, /* howMany */ 1, black);
@@ -1053,9 +1054,15 @@ public class Board {
 
 
      /**
-      * Adds up the scores (values) of the importance of the (protected) points.
+      * Adds up the scores (values) of the importance of the points with blots.
       * Useful for comparing boards.
-      * ?? Should this give more value to highly protected points??
+      * howImportantIsThisPoint() gives more value to protected points. 
+      * Should we give even higher value to highly protected points, say by multiplying like in the comments??
+      * 
+      * For testing, good to know that the 3Blot game has black on 20 & 12 (absolute locations) and white on 4.
+      * So from black's point of view, she is on 5 & 13, worth 21 and 6 respectively. Since single blots we divide by 4.
+      * Total black score should be 21/4 (5.25) & 6/4 (1.5) == 27/4 == 6.75
+      * White's 4 is worth 17, which gets divided by 4 for howImportant=4.25 and total white score = 4.25
       */
      public double getAllPointScore(int playerColor, double playerCautious ) {
          if (! legitPlayerColor(playerColor)) {
@@ -1066,30 +1073,30 @@ public class Board {
          for (int i=1; i<=howManyPoints; i++) {
              /* if ((getColorOnPoint(i)==color)  && (getHowManyBlotsOnPoint(i) > 1)) { */
              int howManyMyBlots = howMuchProtected( i, playerColor);
-             if (howManyMyBlots > 1) {
-                 score+= (howImportantIsThisPoint( i, playerColor, playerCautious) * howManyMyBlots);
-            }
+             if (howManyMyBlots > 0) {
+                 score+= howImportantIsThisPoint( i, playerColor, playerCautious);
+             //    score+= (howImportantIsThisPoint( i, playerColor, playerCautious) * howManyMyBlots);
+             }
          }
          
-         System.out.println("There are " + score + " worth of protected " 
-             + colorName( playerColor ) + " points on the board.");
+         System.out.println("There are " + score + " worth of " + colorName( playerColor ) + " points on the board.");
          return score;
      } /* getAllPointScore( ) */
  
  
      /**
-     * Returns a score (0..24) based on j&j idea of which points are more important
-     * for starting to build on this particular point.
-     * 
-     * This should vary based upon context and risk-averse attitude. 
-     * Receives "cautious" but doesn't use it yet.
-     * ?? Shouldn't the bear off zone be included, be most precious? We love it when blots are in there!
-     * Important for comparing boards.
-     * 
-     * Have unused "cautious" param for my risk adversion. 
-     * Or should driver program calls various functions similar to this depending on mood?
-     * [ ]Should we include the bear-off zone? Or include number of beared off in superMegaHappyScore( )?
-     */
+      * Returns a score (0..24) based on j&j idea of which points are more important
+      * for starting to build on this particular point.
+      * 
+      * This should vary based upon context and risk-averse attitude. 
+      * Receives "cautious" but doesn't use it yet.
+      * ?? Shouldn't the bear off zone be included, be most precious? We love it when blots are in there!
+      * Important for comparing boards.
+      * 
+      * Have unused "cautious" param for my risk adversion. 
+      * Or should driver program calls various functions similar to this depending on mood?
+      * [ ]Should we include the bear-off zone? Or include number of beared off in superMegaHappyScore( )?
+      */
      public double howImportantIsThisPoint(final int pointNum, final int playerColor, double cautious ) {
         if ( ! legitStartLoc(pointNum,playerColor)) { // checks legitPlayerColor( )
             throw new IllegalArgumentException("Bad pointNum '" + pointNum + "', you cheater!");
@@ -1185,6 +1192,7 @@ public class Board {
       *
       * Answer will be in what range???
       * High Score is good!
+      * In the 3BlotGame, with cautious 0.5 (not doing anything), I'm expecting smhscore == 20.5
       */
      public double superMegaHappyScore( double cautious, int playerColor ) {
          double theScore = 0;

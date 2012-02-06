@@ -7,12 +7,17 @@ import java.util.*;   // for collections
  * @version (2012 Feb 6)
  * Gavin suggestion: that AI be an interface that can be implemented in various ways.
  */
-public class AI
-{
+public class AI {
     private int myColor = Game.black;
     private Game myGame = null; /* gets set in constructor. Perhaps can be changed 
         if there are multiple boards ? */
+    private double cautious = 0.5; /* our mood can move from 0.0 to 1.0. 
+      Doesn't make any difference yet, but is a (useless) argument to board.getSuperMegaHappyScore( ) */
+    
 
+    final static double cautiousMinimum = 0.0;
+    final static double cautiousMaximum = 1.0;
+    
 
     /**
      * Constructor for objects of class AI
@@ -21,7 +26,29 @@ public class AI
         myGame = myNewGame;
     } /* Constructor */
 
-
+    
+    /**
+     * our cautiousness mood can move from 0.0 (brave) to 1.0 (timid). 
+     */
+    public double getCautious( ) {
+        return cautious;
+    }
+    
+    
+    /**
+     * our cautiousness mood can move from 0.0 (brave) to 1.0 (timid).
+     */
+    public void setCautious(double newCautious) {
+        
+        if (! (cautiousMinimum<= newCautious) && (newCautious <= 1.0)) {
+            throw new IllegalArgumentException("bad cautious-ness setting '" + newCautious + "' for AI, can only be " 
+               + cautiousMinimum + ".." + cautiousMaximum);
+        } else {
+            cautious = newCautious;
+        }
+    } /* setCautious */
+    
+    
     /**
      * AI's main method
      * Should this return a "Move" and somebody else handles moving?? -gy suggestion 2011
@@ -42,7 +69,7 @@ public class AI
         
         PartialMove gonnaMove = bestPartialMoveOf( myMoves ); /* might be null */
         /* Move gonnaMove = bestMoveOf( myMoves ); /* might be null */
-        System.out.println(gonnaMove);
+        System.out.println("AI will move to '" + gonnaMove + "'");
         
 //        for (PartialMove p : gonnaMove.getMyPartials()) {
 //            myGame.myBoard.handlePoint( p.getStart( )   );
@@ -89,6 +116,9 @@ public class AI
         }
         if ( possibleMoves.isEmpty( ) ) {
             return null;
+        }
+        if (cautious > 0.5) {
+            // be more timid
         }
         Move bestMove = possibleMoves.get(0); /* counting from 0, just like arrays! */
         System.out.println( "My AI is dumb and is just choosing first possible move. Will move to " + bestMove );

@@ -61,6 +61,7 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
     BufferedImage b_bimage;
     Graphics2D g_buffer;
     BoardPict myBoardPict = new BoardPict( /* could receive board size param someday! */);
+    
     Board myBoard = null; // this gets set up in constructor or die
     AI myAI;
     private int currentPlayer = white;
@@ -793,7 +794,7 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
             try {
                 myAI.thinkAndPlay();
             } catch(Exception ex) {
-                System.out.println("AI error: " + ex);
+                System.out.println("AI thinkAndPlay had exception: " + ex);
             }
         } else if (e.getActionCommand().equals(SEND_MSG)) {
             sendMessage();

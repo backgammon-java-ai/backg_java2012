@@ -11,8 +11,13 @@ import org.junit.Test;
  * @author  (Mike Roam)
  * @version (2012 Jan, Feb)
  */
-public class BoardTest
-{
+public class BoardTest {
+
+    Game g;
+    Board b;
+    int ai = Board.black; /* playerColor */
+
+    
     /**
      * Default constructor for test class BoardTest
      */
@@ -46,38 +51,98 @@ public class BoardTest
     @Test
     public void testCanMove()
     {
-        Game g2 = new Game(false);
-        Board b1 = g2.getMyBoard();
-        assertNotNull(b1);
-        b1.myDice.roll();
-        g2.setCurrentPlayer(Board.black);
-        b1.myDice.roll( );
-        assertEquals(true, b1.solitaryBlotOnPoint(12, Board.black));
-        assertEquals(true, b1.canLandOn(12, Board.black));
-        assertEquals(true, b1.canMove(Board.black));
+        g = new Game(false);
+        b = g.getMyBoard();
+        assertNotNull(b);
+        try {
+            b.make3BlotGame( ); /* black on 20 & 12 ends at 0, white on 4 ends past 24 */
+            assertNotNull(b);
+        } catch(Exception e) {
+            /* isn't there a way to test without catching exceptions? */
+            fail(e.toString( ));
+        }
+
+        g.setCurrentPlayer(ai);
+        b.myDice.roll( );
+        assertEquals(true, b.solitaryBlotOnPoint(12, ai));
+        assertEquals(true, b.canLandOn(12, ai));
+        assertEquals(true, b.canMove(ai));
     }
     
     
     @Test
     public void testHandlePoint()
     {
-        Game g2 = new Game(false);
-        Board b1 = g2.getMyBoard();
-        assertNotNull(b1);
-        b1.myDice.roll();
-        g2.setCurrentPlayer(Board.black);
-        b1.myDice.setDie(1,1); /* alternative syntax:b1.myDice.roll(1,2) */
-        b1.myDice.setDie(2,2);
-        assertEquals(true, b1.solitaryBlotOnPoint(12, Board.black));
-        assertEquals(true, b1.canLandOnExact(12,Board.black));
-        assertEquals(true, b1.canLandOn(12, Board.black));
-        assertEquals(true, b1.canMove(Board.black));
-        assertEquals(1, b1.getHowManyBlotsOnPoint(12));
-        b1.handlePoint(12, Board.black);
-        assertEquals(11, b1.getPotDest(1));
-        b1.doPartialMove(12,11,1,Board.black);
-        assertEquals(true, b1.solitaryBlotOnPoint(11, Board.black));
+        g = new Game(false);
+        b = g.getMyBoard();
+        assertNotNull(b);
+        try {
+            b.make3BlotGame( );/* black on 20 & 12 ends at 0, white on 4 ends past 24 */
+            assertNotNull(b);
+        } catch(Exception e) {
+            /* isn't there a way to test without catching exceptions? */
+            fail(e.toString( ));
+        }
+
+        g.setCurrentPlayer(ai);
+        b.myDice.setDie(1,1); /* alternative syntax:b1.myDice.roll(1,2) */
+        b.myDice.setDie(2,6);
+        assertEquals(true, b.solitaryBlotOnPoint(12, ai));
+        assertEquals(true, b.canLandOnExact(12, ai));
+        assertEquals(true, b.canLandOn(12, ai));
+        assertEquals(true, b.canMove(ai));
+        assertEquals(1, b.getHowManyBlotsOnPoint(12));
+        b.handlePoint(12, ai);
+        assertEquals(11, b.getPotDest(1));
+        assertEquals(6, b.getPotDest(2));
+        b.doPartialMove(12,11,/*whichDie:*/1,ai);
+        assertEquals(true, b.solitaryBlotOnPoint(11, ai));
+        b.handlePoint(11, ai);
+        b.doPartialMove(20,14,/*whichDie:*/2,ai);
+        assertEquals(true, b.solitaryBlotOnPoint(11, ai));
+        assertEquals(true, b.solitaryBlotOnPoint(14, ai));
     }
     
+    
+    
+    @Test
+    public void testSuperMegaHappyScore()
+    {
+        g = new Game(false);
+        b = g.getMyBoard();
+        assertNotNull(b);
+        try {
+            b.make3BlotGame( );/* black on 20 & 12 ends at 0, white on 4 ends past 24 */
+            assertNotNull(b);
+        } catch(Exception e) {
+            /* isn't there a way to test without catching exceptions? */
+            fail(e.toString( ));
+        }
+
+        g.setCurrentPlayer(ai);
+        b.myDice.setDie(1,1); /* alternative syntax:b1.myDice.roll(1,2) */
+        b.myDice.setDie(2,6);
+        assertEquals(4.25, b.howImportantIsThisPoint(4, Board.white, /*cautious*/0.5), /*how close?*/0.01);
+        assertEquals(4.25, b.getAllPointScore(Board.white, /*cautious*/0.5), /*how close?*/0.01);
+        assertEquals(5.25, b.howImportantIsThisPoint(20, ai, g.myAI.getCautious( )), /*how close?*/0.01);
+        assertEquals(6.75, b.getAllPointScore(ai, /*cautious*/0.5), /*how close?*/0.01);
+        assertEquals(2.5, b.superMegaHappyScore(/*cautious:*/g.myAI.getCautious( ), ai ), /*how close?*/0.01);
+        System.out.println(b.superMegaHappyScore(/*cautious:*/g.myAI.getCautious( ), ai ));
+        assertEquals(true, b.solitaryBlotOnPoint(12, ai));
+        assertEquals(true, b.canLandOnExact(12, ai));
+        assertEquals(true, b.canLandOn(12, ai));
+        assertEquals(true, b.canMove(ai));
+        assertEquals(1, b.getHowManyBlotsOnPoint(12));
+        b.handlePoint(12, ai);
+        assertEquals(11, b.getPotDest(1));
+        assertEquals(6, b.getPotDest(2));
+        b.doPartialMove(12,11,/*whichDie:*/1,ai);
+        assertEquals(true, b.solitaryBlotOnPoint(11, ai));
+        b.handlePoint(11, ai);
+        b.doPartialMove(20,14,/*whichDie:*/2,ai);
+        assertEquals(true, b.solitaryBlotOnPoint(11, ai));
+        assertEquals(true, b.solitaryBlotOnPoint(14, ai));
+        /* let's test a new score now that we're on positions 11 & 14...*/
+    }
 } /* class BoardTest */
 
