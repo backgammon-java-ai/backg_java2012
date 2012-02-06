@@ -52,9 +52,16 @@ Still not sure if point 25 is being used for anything. Program dies if it doesn'
 
 
 ...Bugs
+[ ]Black is in final quadrant, should be able to bear off, but even exact moves (on point 1, roll=1)
+don't make the "Bear Off" button turn on. What should be turning it on?
+[ ]White is on bar, the rolled dice could let her onto the board where the potential moves are
+showing, but clicking the potMove buttons doesn't cause anything to happen: white stays on the bar! 
+[ ]Black is on points 20 & 3, so 3 is close to bear off but 20 is far away. I rolled 2,4 and clicking 
+on blot on 3 gets point 1 to properly light up and point20 gets red triangle highlight, wassup!!??
+Clicking on the blot on point 20 gets 18 and 16 to properly light up as well as red triangle on point 20.
+Whoa: clicking on blot on 3 and moving to 1 works but also causes the blot on _20_ to jump to point 3!
+Why is the wrong blot moving as well as the correct one?
 [ ]Bear Off button doesn't light up when black gets all her pieces into quadrant 4! (White's bear btn lights)
-oh, quadrant checker fail: java.lang.IllegalArgumentException: can't bear off from point '6' which isn't in final quadrant for player black
-	at Board.bearOff(Board.java:334)
 I wonder if point '5' counts as quad 4 for black ai??
 also, clicking a black blot that would perfectly go to bear off (not past bear off) gets:
 bad pointNum '-100'
@@ -110,6 +117,7 @@ Fixed: obob in setUsed( ).
 
 
 ...High priority
+[ ]Board UI should clearly show whose move it is!
 [ ]See how long it takes to create and score and rank 1000 (non-default) Boards!
 [ ]The value of a board should include pip count factored in some how! Oh, it does implicitly 
 since there will be fewer protection points with a blot bumped out to the bar.

@@ -26,6 +26,7 @@ public class Dice
 
     private boolean rolled = false;
     private Random rdice = null; // random number generator, gets started in constructor.
+    private int usedDiceHowMany = 0;
 
     static final int howManyDice = 2;
     static final int maxMovesCount = 4; /* Bonus for getting doubles. Would be diff with more dice. */
@@ -54,9 +55,10 @@ public class Dice
         for (int i=0; i<maxMovesCount; ++i) {
             used[i] = other.used[i];
         }
+        doubletMovesCountdown = other.doubletMovesCountdown;
         rolled = other.rolled;
         rdice = other.rdice; /* not copying this, just linking to their generator. We don't need another, do we? */
-        doubletMovesCountdown = other.doubletMovesCountdown;
+        usedDiceHowMany = other.usedDiceHowMany;
     } /* Copy Constructor */
     
     
@@ -96,23 +98,23 @@ public class Dice
         resetUsedDice( ); /* calls        resetDoubletMovesCountdown( ); */
     } /* constructor */
 
-    
+
     /**
      * allows UNROLLED or [minDiceVal to maxDiceVal]
      */
     static boolean legitDiceValue(int diceVal) {
         return (((minDiceVal<= diceVal) && (diceVal <= maxDiceVal)) || (diceVal == UNROLLED));
     } /* hasLegitDiceValue( ) */
-    
-    
+
+
     /**
      * for specifying which DIE we're talking about, not the value on a face of a die!
      */
     static boolean legitDieNum(int dieNum) {
         return ((1 <= dieNum) && (dieNum <= howManyDice));
     }
-    
-    
+
+
     /**
      * convenience method.
      * Note: there is no dice0
@@ -121,7 +123,7 @@ public class Dice
         return dice[0];
     } 
 
-    
+
     /**
      * convenience method
      * Note: there is a dice2, and there is no dice0
@@ -129,8 +131,8 @@ public class Dice
     public int getDie2() {
         return dice[1];
     } 
-    
-    
+
+
     /**
      * Dice are named "1", "2" ... up to howManyDice (there is no dice 0!)
      * corresponding to hidden array dice[0], dice[1], respectively
@@ -168,8 +170,8 @@ public class Dice
             } // changed rolled status
         } // changed a die
     } /* setDie( ) */
-    
-    
+
+
     /**
      * I don't want to have a setRolled( ) because I think this is better: 
      * this rolls all dice and sets rolled to true.
@@ -188,7 +190,7 @@ public class Dice
         System.out.println("I just rolled the dice and got " + this.toString( ) + "!");
     }
 
-    
+
     /**
      * changes the first two dice to specified values, is for convenience
      */
@@ -205,10 +207,9 @@ public class Dice
         dice[0] = newRoll1;
         dice[1] = newRoll2;
         System.out.println("I changed the rolled dice to " + this.toString( ) + "!");
-    }
-    
-    
-    
+    } /* roll( )
+
+
     /**
      * If we want to manually set the dice values, set them all before setting "rolled" to true
      * because I will squawk if some of the dice don't have values (are UNROLLED).
@@ -230,8 +231,8 @@ public class Dice
             throw new IllegalArgumentException("Uh-oh: dice think they are rolled but some don't have values.");
         }
     }
-    
-    
+
+
     /**
      * checks for no dice are UNROLLED value
      */
@@ -244,7 +245,7 @@ public class Dice
         }
         return allDiceAreRolled;
     }
-    
+
 
     /**
      * Supposedly, when rolled is true, all dice have values from minDiceVal..maxDiceVal.
@@ -260,9 +261,8 @@ public class Dice
         }
         return rolled;
     }
-    
-    
-    
+
+
     /**
      * gets the private "rdice" random number generator.
      * Why should anybody need it? I don't know, but I'm revealing it
@@ -271,8 +271,8 @@ public class Dice
     public Random getRDice( ) {
         return rdice;
     }
-    
-    
+
+
     /**
      * note: if I get doubles, I'm keeping track of 4 usable dice!
      * Users are speaking in terms of die#1 and die#2 which use our private used[0] and used[1] respectively.
@@ -284,8 +284,18 @@ public class Dice
         }
         return used[newUsedDie-1];
     }
-    
-    
+
+
+    /**
+     * Says how many of the dice have been 'used' so far.
+     */
+    public int getUsedDiceHowMany(  ) {
+        //int howMany = 0;
+        //for (int i=0; i<maxMovesCount; ++i) { if (used[i]) { howMany++; } }
+        return usedDiceHowMany;
+    } /* getUsedDiceHowMany( ) */
+
+
     /**
      * 
      */
@@ -294,8 +304,15 @@ public class Dice
         if ( ! ((1<= newUsedDie) && (newUsedDie <= maxMovesCount)) ) {
             throw new IllegalArgumentException("bad newUsedDie '" + newUsedDie + "', should be 0, 1, or 2");
         }
-        used[newUsedDie-1] = newUsedTF;
-    }
+        if (used[newUsedDie-1] != newUsedTF) { // change!
+            used[newUsedDie-1] = newUsedTF;
+            if (newUsedTF) {
+                usedDiceHowMany++;
+            } else {
+                usedDiceHowMany--;
+            }
+        }
+    } /* setUsedDie( ) */
     
 
     /**
@@ -318,6 +335,7 @@ public class Dice
         for (int i=0; i<maxMovesCount; ++i) {
             used[i] = false;
         }
+        usedDiceHowMany = 0;
         resetDoubletMovesCountdown( );
     }
 

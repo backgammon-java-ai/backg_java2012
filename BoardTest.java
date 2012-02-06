@@ -74,7 +74,7 @@ public class BoardTest
         assertEquals(true, b1.canMove(Board.black));
         assertEquals(1, b1.getHowManyBlotsOnPoint(12));
         b1.handlePoint(12, Board.black);
-        assertEquals(13, b1.getPotDest(1));
+        assertEquals(11, b1.getPotDest(1));
         b1.doPartialMove(12,11,1,Board.black);
         assertEquals(true, b1.solitaryBlotOnPoint(11, Board.black));
     }

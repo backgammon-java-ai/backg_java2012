@@ -4,9 +4,8 @@ import java.util.*;   // for collections
  * class AI tries to think of good moves.
  * 
  * @author (Mike Roam) 
- * @version (a version number or a date)
+ * @version (2012 Feb 6)
  * Gavin suggestion: that AI be an interface that can be implemented in various ways.
- * 
  */
 public class AI
 {
@@ -14,14 +13,14 @@ public class AI
     private Game myGame = null; /* gets set in constructor. Perhaps can be changed 
         if there are multiple boards ? */
 
-        
+
     /**
      * Constructor for objects of class AI
      */
     public AI(Game myNewGame) {
-        myGame = myNewGame;        
+        myGame = myNewGame;
     } /* Constructor */
-    
+
 
     /**
      * AI's main method
@@ -33,8 +32,9 @@ public class AI
             throw new BadBoardException("AI can't move now, it's not AI's turn!");
         }
         if ( ! myGame.myBoard.myDice.getRolled( ) ) {
-            myGame.getMyBoard().myDice.roll( );
+            myGame.getMyBoard().myDice.roll( ); // if onBar then calls handleBar, if can'tMove then calls forfeit
         }
+        // if ( ! myGame.myBoard.onBar(myColor)) { myGame.myBoard.
         ArrayList<PartialMove> myMoves = myGame.myBoard.allLegalPartialMoves( myColor/* , myGame*/);
 //      ArrayList<Move> myMoves = myGame.myBoard.allLegalMoves( myColor/* , myGame*/);
         /* might not have any moves! */

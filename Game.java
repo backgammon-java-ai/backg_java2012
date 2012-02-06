@@ -318,7 +318,9 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
 
 
     /** 
-     * Roll the dice for the current player
+     * Roll the dice for the current player.
+     * If current player is on the bar then this calls "myBoard.handleBar( )"
+     * If the current player can't move, this calls "myBoard.forfeit( )"
      */
     public void doRoll() {
         myBoard.myDice.roll(); /* sets a doublet countdown (4 or 2), has method isDoubles( ) which knows the truth */
@@ -340,7 +342,7 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         }
     } // doRoll( )
 
-    
+
     /**
      * This could handle more than 2 players with slight modification...
      */
@@ -351,8 +353,8 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
             currentPlayer = white;
         }
     } /* changePlayer */
-    
-    
+
+
 
     /**
      * End the current player's turn and start the turn
@@ -363,9 +365,9 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         String msg;
         changePlayer( );
 
-        // Reset vars, turn off new game button
+        // Reset vars, turn off new game button (why??)
         myBoard.myDice.reset();  /* calls resetUsedDice(  ),  sets rolled to false and countdown to 0 */
-        FButton[btn_NewGame].setEnabled(false); // new game
+        FButton[btn_NewGame].setEnabled(false);
         
         repaint();
 
@@ -394,8 +396,8 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
      */
     private void startTurn() {
         // Enable roll dice and new game buttons
-        FButton[btn_RollDice].setEnabled(true); // roll dice
-        FButton[btn_NewGame].setEnabled(true); // new game
+        FButton[btn_RollDice].setEnabled(true);
+        FButton[btn_NewGame].setEnabled(true);
         if (status.networked && !status.observer) {
             Toolkit.getDefaultToolkit().beep();
             JOptionPane.showMessageDialog(this, "It is now your turn");
@@ -455,19 +457,19 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         int left = GUI_Dim.BTN_LEFT_EDGE; /* 475 when board is 430 wide */
         int width = GUI_Dim.BTN_WIDTH; /* 135 */
         int height = GUI_Dim.BTN_HEIGHT; /* 25 */
-        FButton[btn_CancelMove].setBounds(left, 355, width, height); // cancel move
+        FButton[btn_CancelMove].setBounds(left, 355, width, height);
         FButton[btn_CancelMove].setVisible(true);
         FButton[btn_CancelMove].setText(CANCEL);
         FButton[btn_CancelMove].addActionListener(this);
         FButton[btn_CancelMove].setEnabled(false);
 
-        FButton[btn_RollDice].setBounds(left, 320, width, height); // roll dice
+        FButton[btn_RollDice].setBounds(left, 320, width, height);
         FButton[btn_RollDice].setVisible(true);
         FButton[btn_RollDice].setText(ROLL_DICE);
         FButton[btn_RollDice].addActionListener(this);
         FButton[btn_RollDice].setEnabled(true);
 
-        FButton[btn_BearOff].setBounds(left, 285, width, height); // bear off
+        FButton[btn_BearOff].setBounds(left, 285, width, height);
         FButton[btn_BearOff].setVisible(true);
         FButton[btn_BearOff].setText(BEAR_OFF);
         FButton[btn_BearOff].addActionListener(this);
@@ -487,33 +489,33 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         FButton[btn_AtPotentialMove2].addActionListener(this);
         FButton[btn_AtPotentialMove2].setEnabled(true);
 
-        FButton[btn_NewGame].setBounds(left, 250, width, height); // new game
+        FButton[btn_NewGame].setBounds(left, 250, width, height);
         FButton[btn_NewGame].setVisible(true);
         FButton[btn_NewGame].setText(NEW_GAME);
         FButton[btn_NewGame].addActionListener(this);
         FButton[btn_NewGame].setEnabled(true);
         
-        FButton[btn_ComputerMove].setBounds(left, 380, width, height); // computer move
+        FButton[btn_ComputerMove].setBounds(left, 380, width, height);
         FButton[btn_ComputerMove].setVisible(true);
         FButton[btn_ComputerMove].setText(COMPUTER_MOVE);
         FButton[btn_ComputerMove].addActionListener(this);
         FButton[btn_ComputerMove].setEnabled(true);
 
         if (status.networked) {
-            FButton[btn_Connect].setBounds(left, 225, width, height); // connect
+            FButton[btn_Connect].setBounds(left, 225, width, height);
             FButton[btn_Connect].setVisible(true);
             FButton[btn_Connect].setText(CONNECT);
             FButton[btn_Connect].addActionListener(this);
             FButton[btn_Connect].setEnabled(true);
 
-            FButton[btn_SendMessage].setBounds(left, TOP_MARGIN + getInsets().top + 412, width, height); // send message
+            FButton[btn_SendMessage].setBounds(left, TOP_MARGIN + getInsets().top + 412, width, height);
             FButton[btn_SendMessage].setVisible(true);
             FButton[btn_SendMessage].setText(SEND_MSG);
             FButton[btn_SendMessage].addActionListener(this);
             FButton[btn_SendMessage].setEnabled(false);
 
-            FButton[btn_RollDice].setEnabled(false); // roll dice
-            FButton[btn_NewGame].setEnabled(false); // new game
+            FButton[btn_RollDice].setEnabled(false);
+            FButton[btn_NewGame].setEnabled(false);
 
             msg_input.setBounds(LEFT_MARGIN - getInsets().left, TOP_MARGIN + getInsets().top + 412, 450, height);
 
@@ -568,7 +570,7 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
      * ================================================*/
 
     /**
-     *  The network player has won
+     * The network player has won
      */
     public void receiveLose() {
         FButton[btn_NewGame].setEnabled(true);
@@ -1296,6 +1298,9 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
     } // debug_data( )
 
 
+    /**
+     * Set up a new game
+     */
     public void resetGame() {
         // System.out.println("GAME RESET WAS HIT");
         // Reset Game data /
