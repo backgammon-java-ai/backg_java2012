@@ -145,6 +145,8 @@ So maybe score = (s * d)?   or s + d?
 
 
 ...Future Plans:
+[ ]supermegahappyscore cares that blots are on the bar, should care even more depending on where
+the blot got sent back from. (Did he lose a valuable point?)
 [ ]More than 2 players, square board (Julien idea).
 [ ]Bayard suggests physics so dice and blots can bounce and move and click.
 [ ]GUI says whose turn, Xs out the dice that have been used, has undo, 
