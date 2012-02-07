@@ -71,8 +71,10 @@ public class BoardTest {
     
     
     @Test
-    public void testHandlePoint()
-    {
+    /**
+     * testing ai points in mid board
+     */
+    public void testHandlePoint1()  {
         g = new Game(false);
         b = g.getMyBoard();
         assertNotNull(b);
@@ -104,10 +106,44 @@ public class BoardTest {
     }
     
     
+    @Test
+    /**
+     * testing ai points in end game
+     */
+    public void testHandlePoint2()  {
+        g = new Game(false);
+        b = g.getMyBoard();
+        assertNotNull(b);
+        try {
+            b.makeAlmostDoneGame( );/* black on 1,4,6 ends at 0, all black in quad 4 */
+            assertNotNull(b);
+        } catch(Exception e) {
+            /* isn't there a way to test without catching exceptions? */
+            fail(e.toString( ));
+        }
+
+        g.setCurrentPlayer(ai);
+        b.myDice.setDie(1,5); /* alternative syntax:b1.myDice.roll(1,2) */
+        b.myDice.setDie(2,6);
+        assertEquals(true, b.solitaryBlotOnPoint(6, ai));
+        assertEquals(true, b.canLandOnExact(6, ai));
+        assertEquals(true, b.canLandOn(6, ai));
+        assertEquals(true, b.canMove(ai));
+        assertEquals(1, b.getHowManyBlotsOnPoint(6));
+        b.handlePoint(6, ai);
+        assertEquals(Board.BLACK_BEAR_OFF_LOC, b.getPotDest(2));
+        assertEquals(6, b.getPotDest(2));
+        b.doPartialMove(6,6,/*whichDie:*/2,ai);
+        assertEquals(false, b.solitaryBlotOnPoint(6, ai));
+        b.handlePoint(4, ai);
+        b.doPartialMove(4,5,/*whichDie:*/1,ai);
+        assertEquals(4, b.getHowManyBlotsOnPoint(4));
+    }
+    
+    
     
     @Test
-    public void testSuperMegaHappyScore()
-    {
+    public void testSuperMegaHappyScore() {
         g = new Game(false);
         b = g.getMyBoard();
         assertNotNull(b);
