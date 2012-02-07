@@ -141,7 +141,36 @@ public class BoardTest {
         assertEquals(4, b.getHowManyBlotsOnPoint(4));
         assertEquals(14, b.black_bear);
     }
+
     
+        @Test
+    /**
+     * testing ai points in end game, doesn't do as much as testHandlePoint2
+     */
+    public void testHandlePoint2a() {
+        g = new Game(false);
+        b = g.getMyBoard();
+        assertNotNull(b);
+        try {
+            b.makeAlmostDoneGame( );
+            /* black just has singles in quadrant 4, on points 1,4,6 (bearing off to 0) */
+            assertNotNull(b);
+        } catch(Exception e) {
+            /* isn't there a way to test without catching exceptions? */
+            fail(e.toString( ));
+        }
+
+        g.setCurrentPlayer(ai);
+        b.myDice.roll(5,6); /* alternative syntax:b1.myDice.setDie(1,5) setDie(2,6)*/
+        assertEquals(true, b.solitaryBlotOnPoint(6, ai));
+        assertEquals(true, b.canLandOnExact(6, ai));
+        assertEquals(true, b.canLandOn(6, ai));
+        assertEquals(true, b.canMove(ai));
+        assertEquals(1, b.getHowManyBlotsOnPoint(6));
+        b.handlePoint(6, ai);
+        assertEquals(1, b.getPotDest(1));
+        assertEquals(Board.BLACK_BEAR_OFF_LOC, b.getPotDest(2));
+    }
     
     
     @Test
