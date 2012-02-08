@@ -255,7 +255,7 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         //        myBoard.handleBar(playerColor);
         //    }
         //    if (!myBoard.canMove(playerColor )) {
-        //        forfeit();
+        //        forfeitTurn();
         //    }
         //}
     } // doMove( )
@@ -264,15 +264,15 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
 
 
     /**
-    * Forfeit the current player’s turn.
-    * Is called by Board, so can’t be private.
+    * Forfeit the current player's turn.
+    * Is called by Board, so can't be private.
     */
-    public void forfeit() {
+    public void forfeitTurn() {
         String msg = "You are stuck, you forfeit your turn.";
         JOptionPane.showMessageDialog(this, msg);
         endTurn();
         repaint();
-    } // forfeit( )
+    } // forfeitTurn( )
 
 
     /**
@@ -321,7 +321,7 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
     /** 
      * Roll the dice for the current player.
      * If current player is on the bar then this calls "myBoard.handleBar( )"
-     * If the current player can't move, this calls "myBoard.forfeit( )"
+     * If the current player can't move, this calls "Game.forfeitTurn( )"
      */
     public void doRoll() {
         myBoard.myDice.roll(); /* sets a doublet countdown (4 or 2), has method isDoubles( ) which knows the truth */
@@ -339,7 +339,7 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         if (myBoard.onBar(currentPlayer)) {
             myBoard.handleBar(currentPlayer);
         } else if ( ! myBoard.canMove(currentPlayer) ) {
-            forfeit();
+            forfeitTurn();
         }
     } // doRoll( )
 
@@ -682,13 +682,21 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         if ( ! Board.legitEndLoc( newpos, playerColor )) {
             throw new IllegalArgumentException("Can't legally move to point '" + newpos + "'");
         }
+        if ( this != null ) {
+            throw new IllegalArgumentException("receiveMove doesn't know whether to call movePoint( ) or ??");
+        } else {
+        // shouldn't this just call moveBlot or doPartialMove or something like that
+        // rather than re-inventing all this bar/bear/point movement??
         if (playerColor == white) {
             if ( (1 <= oldpos) && (oldpos<= Board.howManyPoints) && (1<=newpos) && (newpos<=Board.howManyPoints) ) {
                 myBoard.moveBlot(playerColor /* white*/, oldpos, newpos);
                 repaint();
-            } else if (newpos==Board.WHITE_BEAR_OFF_LOC ) {
+            } else if (newpos==Board.WHITE_BEAR_OFF_LOC ) /* || WHITE_PAST_BEAR_OFF_LOC?? */ {
+                    /* shouldn't this call board.bearOff( ) to make sure everything is handled? */
                 myBoard.white_bear++;
-                myBoard.setPoint(/*point*/oldpos, /*howMany:*/myBoard.getHowManyBlotsOnPoint(oldpos) - 1, playerColor/*white*/);
+                myBoard.takeOneBlotOffPoint( oldpos );
+                /* instead of */
+                //myBoard.setPoint(/*point*/oldpos, /*howMany:*/myBoard.getHowManyBlotsOnPoint(oldpos) - 1, playerColor/*white*/);
                 repaint();
             } else if (oldpos== Board.WHITE_BAR_LOC ) {
                 myBoard.white_bar--;
@@ -702,10 +710,11 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
                 && (1<=newPosForBlack) && (newPosForBlack<=Board.howManyPoints) ) {
                 myBoard.moveBlot(playerColor /* black*/, oldPosForBlack, newPosForBlack);
                 repaint();
-            } else if (newpos == Board.BLACK_BEAR_OFF_LOC /* was 26*/) {
+            } else if (newpos == Board.BLACK_BEAR_OFF_LOC /* was 26*/) /* || BLACK_PAST_BEAR_OFF_LOC?? */{
                 myBoard.black_bear++;
-                myBoard.setPoint(/*pointNum:*/newPosForBlack
-                    , /*howMany:*/myBoard.getHowManyBlotsOnPoint(newPosForBlack) - 1, black);
+                myBoard.takeOneBlotOffPoint( newPosForBlack ); /* instead of */
+                //myBoard.setPoint(/*pointNum:*/newPosForBlack
+                //    , /*howMany:*/myBoard.getHowManyBlotsOnPoint(newPosForBlack) - 1, black);
                 repaint();
             } else if (oldpos == Board.BLACK_BAR_LOC /*was -1*/) {
                 myBoard.black_bar--;
@@ -714,6 +723,7 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
                 repaint();
             }
         }
+    } /* end of sudden death */
     } // receiveMove( )
 
 
@@ -792,7 +802,7 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
             myBoard.doPartialMove(myBoard.getOldPoint(), /*toPoint:*/myBoard.getPotDest(2), /*whichDie:*/2, currentPlayer);
         } else if (e.getActionCommand().equals(COMPUTER_MOVE)) {
             try {
-                myAI.thinkAndPlay();
+                myAI.thinkAndPlay( );
             } catch(Exception ex) {
                 System.out.println("AI thinkAndPlay had exception: " + ex);
             }
@@ -1326,5 +1336,5 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         repaint();
     } // resetGame( )
 
-} // class Game
-
+ /* class Game */
+}

@@ -41,8 +41,8 @@ public class AI {
     public void setCautious(double newCautious) {
         
         if (! (cautiousMinimum<= newCautious) && (newCautious <= 1.0)) {
-            throw new IllegalArgumentException("bad cautious-ness setting '" + newCautious + "' for AI, can only be " 
-               + cautiousMinimum + ".." + cautiousMaximum);
+            throw new IllegalArgumentException("bad cautious-ness setting '" + newCautious 
+                    + "' for AI, can only be " + cautiousMinimum + ".." + cautiousMaximum);
         } else {
             cautious = newCautious;
         }

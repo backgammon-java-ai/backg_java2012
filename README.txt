@@ -56,6 +56,7 @@ Still not sure if point 25 is being used for anything. Program dies if it doesn'
 be used because AI is not taking blot on point 6 off first with that 6 bearoff, and is instead
 trying to do a move (taking blot on point 1 way off) that is illegal because can't use inexact rolls yet.
 Run testHandlePoint2a() and press computer move and see the terminal!
+AI thinkAndPlay had exception: java.lang.IllegalArgumentException: Bad pointNum '-100'
 [ ]Black is in final quadrant, should be able to bear off, but even exact moves (on point 1, roll=1)
 don't make the "Bear Off" button turn on. What should be turning it on?
 [ ]White is on bar, the rolled dice could let her onto the board where the potential moves are

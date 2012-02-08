@@ -269,8 +269,8 @@ public class Board {
         checkForBadNumberOfBlots( white );
         checkForBadNumberOfBlots( black );
     } // make3BlotGame
-    
-    
+
+
     /**
      * Is called by Game.doPartialMove( ), so can't be private.
      * Moves blot from one position to another, modifying the board object.
@@ -278,10 +278,16 @@ public class Board {
      * so shouldn't be called willy nilly!
      * 
      * Can move Blots in from bar, so is a partner with "moveToBar( )"
-     * Maybe there should be a "moveFromBar( )" that includes the middle of this
+     * There is handleBar( )... does it overlap if function?
+     * Or maybe there should be a "moveFromBar( )" that includes the middle of this
      * and is called by this if necessary. Could moveFromBar be called by others?
      * 
      * Apparently old_pos value -1 meant from bar???
+     * ?? Hey, this is doing bearOff without using Board.bearOff( )?
+     * Who calls this, and shouldn't they call bearOff if necessary and legit, instead??
+     * Board.doPartialMove( ) calls moveBlot( )
+     * Game.receiveMove( ) [when networked] might be calling this.
+     * 
      */
     public void moveBlot(int playerColor, int old_pos, int newPointNum) {
         if ( ! legitStartLoc( old_pos, playerColor )) { /* checks also legitPlayerColor */
@@ -294,6 +300,7 @@ public class Board {
         // and add it to the point
         int howManyBlotsOnDest =  getHowManyBlotsOnPoint(newPointNum); /* cache */
         
+        /* doesn't handleBar( ) do this?? */
         if (old_pos == WHITE_BAR_LOC ) {
             if ((playerColor==white) && (white_bar > 0)) { /* "(white_bar>0)" is equiv of  "onBar(white)" */
                 white_bar--;
@@ -306,7 +313,7 @@ public class Board {
             }
             setPoint(newPointNum, howManyBlotsOnDest + 1, playerColor);
         }
-        if (old_pos == BLACK_BAR_LOC /*25*/) {
+        if (old_pos == BLACK_BAR_LOC ) {
             if ((playerColor==black) && (black_bar > 0)) {
                 black_bar--;
             } else if (playerColor!=white) {
@@ -336,7 +343,7 @@ public class Board {
             // Increase the blots on the new point
             setPoint(newPointNum, howManyBlotsOnDest + 1, playerColor);
         }
-    } /* moveBlot */
+    } /* moveBlot( ) */
 
     
    /**
@@ -379,18 +386,25 @@ public class Board {
         }
 
         // Remove the dice we used
+        // ?? might have been moving to PAST_BEAR?? 
+        // or did moveBlot( ), handlePoint( ) or endPointMovingFrom( )
+        // ?? actually adjust the target to BEAR_OFF_LOC after verifying needsInexact( )?
         if (!myDice.isDoubles( )) {
             // if a previous move has already occurred, we are done
             if ((myDice.getUsedDie(1)) || (myDice.getUsedDie(2))) {
                 myGame.endTurn();
             } else {
                 // if you can bear off with both, use smaller dice
-                if (((potDest1==WHITE_BEAR_OFF_LOC)||(potDest1==BLACK_BEAR_OFF_LOC)) 
-                  && ((potDest1==WHITE_BEAR_OFF_LOC)||(potDest1==BLACK_BEAR_OFF_LOC))) {
-                    if (myDice.getDie(1) > myDice.getDie(2)) {
-                        myDice.setUsedDie(2,true );  // I see a Die being marked, but when is move happening??
+                if (((potDest1==WHITE_BEAR_OFF_LOC)||(potDest1==BLACK_BEAR_OFF_LOC)
+/*new:*/                || (potDest1==WHITE_PAST_BEAR_OFF_LOC)||(potDest1==BLACK_PAST_BEAR_OFF_LOC)) 
+                  && ((potDest2==WHITE_BEAR_OFF_LOC)||(potDest2==BLACK_BEAR_OFF_LOC)
+/*new:*/                || (potDest2==WHITE_PAST_BEAR_OFF_LOC)||(potDest2==BLACK_PAST_BEAR_OFF_LOC))                   
+                  ) {
+                    if (myDice.getDie(1) <= myDice.getDie(2)) {
+                        myDice.setUsedDie(1,true );  
+                        // die being marked for move that happened 30 lines up
                     } else {
-                        myDice.setUsedDie(1,true );
+                        myDice.setUsedDie(2,true );
                     }
                 } else if ((potDest1==WHITE_BEAR_OFF_LOC)||(potDest1==BLACK_BEAR_OFF_LOC)) {
                     myDice.setUsedDie( 1,true );
@@ -410,16 +424,16 @@ public class Board {
         myGame.repaint();
 
         if ( ! canMove(playerColor) ) {
-            myGame.forfeit();
+            myGame.forfeitTurn();
         }
     } // bearOff
     
     
     /**
      * Handle someone being on the bar.
-     * Mark possible escapes and forfeit if there are none.
+     * Mark possible escapes and forfeitTurn if there are none.
      * This is automatically called by Game.doRoll( )   if   Board.onBar(Game.current_player)
-     * and doRoll otherwise checks whether a player canMove( ) and forfeits for them if they can't move! 
+     * and doRoll otherwise checks whether a player canMove( ) and forfeitTurns for them if they can't move! 
      */
     public void handleBar(int playerColor) {
         int escape1;
@@ -457,18 +471,18 @@ public class Board {
             myGame.status.point_selected = true;
         }
 
-        // Nope? Then they forfeit
+        // Nope? Then they forfeitTurn
         if (myDice.getUsedDiceHowMany( ) == 0) {
             if ( (!canLandOn(escape1, playerColor)) && (!canLandOn(escape2, playerColor)) ) {
-                myGame.forfeit();
+                myGame.forfeitTurn();
             }
         } else if (myDice.getUsedDie(1)) {
             if (!canLandOn(escape2, playerColor)) {
-                myGame.forfeit();
+                myGame.forfeitTurn();
             }
         } else if (myDice.getUsedDie(2)) {
             if (!canLandOn(escape1, playerColor)) {
-                myGame.forfeit();
+                myGame.forfeitTurn();
             }
         }
     } // handleBar
@@ -583,7 +597,7 @@ public class Board {
      /**
      * This will mostly be used for partial moves?
      * The biggest possible partial move is 6 (diceHighNum).
-     * The smallest possible partial move is 1 (or 0? if forfeit? not really a "move")
+     * The smallest possible partial move is 1 (or 0? if forfeitTurn? not really a "move")
      * The biggest possible (full, non partial) move in standard backgammon is 24: doubles of 6s.
      */
     public static boolean legitStepsNum( int steps ) {
@@ -1427,15 +1441,21 @@ public class Board {
 
 
     /**
-     * blots can't bear off until all 15 are on final 6 points (final quadrant).
+     * blots can't bear off until all 15 are on final 6 points (final quadrant) 
+     * or already beared off.
+     * So if onBar( ) then can't bear off, but then there won't be 15 blots
+     * on board and bear, so redundant unnecessary checking onBar( ).
      */
     public boolean canBearOff(final int playerColor) {
         if ( ! legitPlayerColor(playerColor) ) {
             throw new IllegalArgumentException("bad player color '" + playerColor + "'");
         }
         
-        int sum = 0;
-        
+        //Here's a quick disqualifier:
+        if (onBar(playerColor)) {
+            return false;
+        }
+        int sum = 0; /* gonna count on blots on final quadrant and bear */
         if (playerColor==white) {   
             // add up the white blots on last 6 points + those that already did bear off.
             // If all the blots are here, we can bear off!
@@ -1596,10 +1616,17 @@ public class Board {
         
         boolean canmove = false;
         int move1, move2;
-        // Cycle through all the points
+        // Cycle through all the points??
         
-        if ((! canMoveExact(playerColor) )  && (canBearOff(playerColor))) {
-            // ?? and no blots are on higher pointNum than the blot that wants to move/?
+        if (onBar(playerColor)) { //  canBearOff( ) also checks this
+            return false;
+        }
+        if (canMoveExact(playerColor)) {
+            return false;
+            // Since there is an exact move for the player (perhaps even a bear off)
+            // then do I not need to check that no blots are on higher pointNum than 
+            // the lowest dice??
+        } else if (canBearOff(playerColor)) {
             return true;
         } else {
             return false;
@@ -1619,12 +1646,14 @@ public class Board {
         }
         if ( ! canMove( playerColor ) ) {
             System.out.println(Board.colorName( playerColor ) + " cannot move.");
-            return new ArrayList<PartialMove>( ); /*  I will return an ArrayList that has no elements ! */
+            myGame.forfeitTurn( ); // ??
+            return new ArrayList<PartialMove>( ); /* return an ArrayList that has no elements ! */
         }
         LocList myPoints = allMoveableBlotLocs(playerColor); /* might be empty */
         if (myPoints.myList.isEmpty( )) {
             System.out.println(Board.colorName( playerColor ) + " has no moveable blots.");
-            return new ArrayList<PartialMove>( ); /*  I will return an ArrayList that has no elements ! */
+            myGame.forfeitTurn( ); // ??
+            return new ArrayList<PartialMove>( ); /* return an ArrayList that has no elements ! */
         }
         System.out.println("in board.allLegalPartialMoves( ), moveableBlotLocs==" + myPoints.toString( ));
         
@@ -1792,6 +1821,7 @@ public class Board {
      * and myDice.getDoubletMovesCountdown( ) keeps track of 4 moves countdown.
      * 
      * Note: if this is the final partial move, this switches players by calling Game.endTurn( )!
+     * This doesn't seem to be checking the legality of the move.
      */
     /*private*/ void doPartialMove(int fromPoint, int toPoint, int whichDie, int playerColor) {
         /* In networked mode: 25 = to bar, 26 = bear off */
@@ -1808,7 +1838,7 @@ public class Board {
         boolean switchedplayers = true;
 
         // If the new space is empty, make the move
-        // Else send the opponent on the bar first
+        // Else send the opponent to the bar first
         int blotColor = getColorOnPoint(toPoint);
         if ((blotColor==playerColor ) || (blotColor==neutral)) {
             /* formerly used "old_point" field which said where the blot in motion was started from */
@@ -1817,7 +1847,7 @@ public class Board {
                 myGame.comm.sendmove(fromPoint /* was myBoard.getOldPoint()*/, toPoint);
             }
         } else { 
-            // send the opponent on the bar first
+            // send the opponent to the bar first
             moveToBar(toPoint, blotColor);
             moveBlot(playerColor, fromPoint /*was myBoard.getOldPoint()*/, toPoint);
             if (myGame.status.networked) {
@@ -1855,7 +1885,7 @@ public class Board {
                 handleBar(playerColor);
             }
             if (!canMove(playerColor )) {
-//                forfeit(); ?? 
+                myGame.forfeitTurn(); //?? 
             }
         }
     } // doPartialMove( )
