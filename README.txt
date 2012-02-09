@@ -2,20 +2,13 @@
 This is the JBackgammon README file.
 ------------------------------------------------------------------------
 
-PROJECT TITLE: Backgammon AI and strategy
+PROJECT TITLE: Backgammon with AI
 
 PURPOSE OF PROJECT: build backgammon a.i.
 
 VERSION or DATE:
-2012 Feb 1: compiles, computer makes its own partial moves (user has to press 
-"Computer Move" button twice (or 4 times for doubles), dumb AI is still taking 
-first possible move. If the first possible move is attempt to bear off (and other
-blots aren't yet in final quadrant) the AI gets stuck.
-
-2012 Jan 4: compiles, and AI is working but dumb: can't handle coming in from bar
-and chooses first possible move. Human has to actually make the moves for the AI
-(which is playing black).
-started 2011 Oct 18
+2012 Feb 9 [x]Shows whose turn it is, shows board score. AI still dies
+when a blot is near the end but can't bear off yet.
 
 HOW TO START THIS PROJECT: 
   In BlueJ you can instantiate "JBackgammon(false)" (boolean says whether networked or not)
@@ -52,6 +45,9 @@ Still not sure if point 25 is being used for anything. Program dies if it doesn'
 
 
 ...Bugs
+[ ]AI doesn't know to come in from bar: maybe "allLegalPartialMoves" is only looking at points
+instead of looking at bar.
+Bugs below here might be gone, now!
 [ ]testHandlePoint2a() shows that AI doesn't know to bear off, AND chooses a move that can't
 be used because AI is not taking blot on point 6 off first with that 6 bearoff, and is instead
 trying to do a move (taking blot on point 1 way off) that is illegal because can't use inexact rolls yet.
@@ -123,16 +119,17 @@ Fixed: obob in setUsed( ).
 
 ...High priority
 [ ]Board UI should clearly show whose move it is!
-[ ]See how long it takes to create and score and rank 1000 (non-default) Boards!
+[ ]See how long it takes to create and score and rank 100 (non-default) Boards!
 [ ]The value of a board should include pip count factored in some how! Oh, it does implicitly 
 since there will be fewer protection points with a blot bumped out to the bar.
 [ ]Get AI move-picker to know about coming in from bar.
 [ ]Get AI to do a better job of choosing a move. This will involve finding combinations of partial 
 moves, perhaps trying using one roll first and then the other roll first, especially if trying to
 come in from the bar.
-[x]Get AI to actually make its move. Problem is that "superMove" wants to know whether
-to use the first or second dice, and our partialMoves haven't been remembering which dice
+[x]Got AI to actually make its move. Problem was that "doPartialMove( )" wanted to know whether
+to use the first or second dice, so our partialMoves are now remembering which dice
 is which.
+
 
 ...Things to think about and decide
 [ ]When computing the value of points on the board, how much more is a point with 3 blots on it 
@@ -150,6 +147,10 @@ So maybe score = (s * d)?   or s + d?
 
 
 ...Future Plans:
+[ ]Mark the dice that have been used.
+[ ]Do formal start procedure: Each player rolls one dice (one white, one black): high number goes
+first using those two rolls. (For tie, roll again.)
+[ ]Have some buttons on the screen to choose whether AI is white or black.
 [ ]supermegahappyscore cares that blots are on the bar, should care even more depending on where
 the blot got sent back from. (Did he lose a valuable point?)
 [ ]More than 2 players, square board (Julien idea).
@@ -183,6 +184,16 @@ Perhaps this could also show how many steps left before finishing.
 
 
 ...History
+2012 Feb 1: compiles, computer makes its own partial moves (user has to press 
+"Computer Move" button twice (or 4 times for doubles), dumb AI is still taking 
+first possible move. If the first possible move is attempt to bear off (and other
+blots aren't yet in final quadrant) the AI gets stuck.
+
+2012 Jan 4: compiles, and AI is working but dumb: can't handle coming in from bar
+and chooses first possible move. Human has to actually make the moves for the AI
+(which is playing black).
+started 2011 Oct 18
+
 2011 nov 8
 [x]PipCount now counts blots on the bar (that have to come back in: count as 25).
 
@@ -194,4 +205,9 @@ Added "AI" class which might have the brains inside. (Has to know about board so
 2011 oct 18
 Changed most all methods to speak of "points" (instead of columns or spikes) and "blots" (pieces).
 Set up a method in JBackgammon to start the board with other than default setup.
-[x]Added functions to check legit point numbers and colors. 
+[x]Added functions to check legit point numbers and colors.
+
+
+
+Notes:
+as of Feb2012: AI calls thinkAndPlay which asks board for allLegalPartialMoves and does the "best."

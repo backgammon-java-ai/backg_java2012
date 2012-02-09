@@ -35,6 +35,10 @@ public class AI {
     }
     
     
+    public int getColor( ) {
+        return myColor;
+    }
+    
     /**
      * our cautiousness mood can move from 0.0 (brave) to 1.0 (timid).
      */
@@ -63,6 +67,7 @@ public class AI {
         }
         // if ( ! myGame.myBoard.onBar(myColor)) { myGame.myBoard.
         ArrayList<PartialMove> myMoves = myGame.myBoard.allLegalPartialMoves( myColor/* , myGame*/);
+        // how about trying aLegalMove( ) instead of allLegalPartialMoves( )????
 //      ArrayList<Move> myMoves = myGame.myBoard.allLegalMoves( myColor/* , myGame*/);
         /* might not have any moves! */
         //System.out.println(myMoves);

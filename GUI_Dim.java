@@ -14,6 +14,9 @@ public class GUI_Dim
     final static int BTN_LEFT_EDGE = LEFT_EDGE + 20; /* 475. should be resizeable someday */
     final static int BTN_WIDTH = 135;
     final static int BTN_HEIGHT = 25;
+    final static int STATS_TOP_MARGIN = 30; /* 30 */
+    final static int TEXT_LINE_HEIGHT = 18; /* 18 */
+
     
     final static int GUI_WIDTH = 150; /* ? */
     final static int GUI_HEIGHT = BoardPict.BOARD_HEIGHT; /* 360 */

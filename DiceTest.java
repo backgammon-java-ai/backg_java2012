@@ -139,7 +139,24 @@ public class DiceTest
         }
         assertNull(d3);
    }
+
+    @Test
+    public void testHighestUnused()
+    {
+        Dice d = new Dice(4, 6);
+        assertEquals(0, d.getUsedDiceHowMany());
+        assertEquals(6, d.highestUnusedRoll());
+        assertEquals(2, d.whichUnusedDieIsHighest());
+        assertEquals(4, d.lowestUnusedRoll());
+        assertEquals(1, d.whichUnusedDieIsLowest());
+        d.setUsedDie(2, true);
+        assertEquals(4, d.highestUnusedRoll());
+        assertEquals(1, d.whichUnusedDieIsHighest());
+        assertEquals(4, d.lowestUnusedRoll());
+        assertEquals(1, d.whichUnusedDieIsLowest());
+    }
 }
+
 
  /* class DiceTest */
 

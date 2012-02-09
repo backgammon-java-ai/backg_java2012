@@ -44,6 +44,9 @@ public class MoveTest
     @Test
     public void testMove()
     {
+        /* old test, not working anymore, maybe it needs specific board
+           probably has issue with the game needing a first roll of dice
+           to choose a currentPlayer */
         Game g1 = new Game(false);
         PartialMove pm1 = new PartialMove(3, 2, 5, g1, g1.getCurrentPlayer( ), 1);
         PartialMove pm2 = new PartialMove(5, 3, 8, g1, g1.getCurrentPlayer( ), 2);

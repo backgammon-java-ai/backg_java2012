@@ -30,9 +30,11 @@ public class Dice
 
     static final int howManyDice = 2;
     static final int maxMovesCount = 4; /* Bonus for getting doubles. Would be diff with more dice. */
+    static final int NO_SUCH_DIE = -9; /* if someone asks unrolled dice which one is highest roll */
+    
     static final int UNROLLED = 0; /* for dice in mid-air? */
-    static final int minDiceVal = 1;
-    static final int maxDiceVal = 6;
+    static final int minDieVal = 1;
+    static final int maxDieVal = 6;
 
     
     /**
@@ -72,28 +74,28 @@ public class Dice
      * Either both dice have values in the "rolled" range or both must be UNROLLED:
      * This will throw exception if one diceValue is UNROLLED while other is in rolled range!
      */
-    public Dice(int newDice1, int newDice2/*, boolean newRolled*/) 
+    public Dice(int newDie1, int newDie2/*, boolean newRolled*/) 
       /* throws IllegalArgumentException, ArrayIndexOutOfBoundsException */
       {
         if (! (howManyDice == 2)) {
             throw new IllegalArgumentException("Can't use the 2 dice constructor because we have " + howManyDice + " dice!");
         }
-        if (! legitDiceValue( newDice1 ) ) {
-            throw new IllegalArgumentException("dice1 is given bad value '" + newDice1 
-               + "' not 0 and not [" + minDiceVal + ".." + maxDiceVal + "]");
+        if (! legitDiceValue( newDie1 ) ) {
+            throw new IllegalArgumentException("dice1 is given bad value '" + newDie1 
+               + "' not 0 and not [" + minDieVal + ".." + maxDieVal + "]");
         }
-        if (! legitDiceValue( newDice2 )) {
-            throw new IllegalArgumentException("dice2 is given bad value '" + newDice2 
-               + "' not 0 and not [" + minDiceVal + ".." + maxDiceVal + "]");
+        if (! legitDiceValue( newDie2 )) {
+            throw new IllegalArgumentException("dice2 is given bad value '" + newDie2 
+               + "' not 0 and not [" + minDieVal + ".." + maxDieVal + "]");
         }
-        if ((newDice1 != newDice2) && ((newDice1 == UNROLLED) || (newDice2 == UNROLLED))) {
-            throw new IllegalArgumentException("Bad dice pair '" + newDice1 + "," + newDice2 
-                +"', must both be UNROLLED or both be" + minDiceVal + ".." + maxDiceVal);
+        if ((newDie1 != newDie2) && ((newDie1 == UNROLLED) || (newDie2 == UNROLLED))) {
+            throw new IllegalArgumentException("Bad dice pair '" + newDie1 + "," + newDie2 
+                +"', must both be UNROLLED or both be" + minDieVal + ".." + maxDieVal);
         }
         /* so either dice are both unrolled, or both rolled, and it makes no difference which one tells us */ 
-        rolled = (newDice1 != UNROLLED);
-        dice[0] = newDice1;
-        dice[1] = newDice2;
+        rolled = (newDie1 != UNROLLED);
+        dice[0] = newDie1;
+        dice[1] = newDie2;
         rdice = new Random(); // random number generator, gets started in constructor.
         resetUsedDice( ); /* calls        resetDoubletMovesCountdown( ); */
     } /* constructor */
@@ -102,8 +104,8 @@ public class Dice
     /**
      * allows UNROLLED or [minDiceVal to maxDiceVal]
      */
-    static boolean legitDiceValue(int diceVal) {
-        return (((minDiceVal<= diceVal) && (diceVal <= maxDiceVal)) || (diceVal == UNROLLED));
+    static boolean legitDiceValue(int dieVal) {
+        return (((minDieVal<= dieVal) && (dieVal <= maxDieVal)) || (dieVal == UNROLLED));
     } /* hasLegitDiceValue( ) */
 
 
@@ -146,6 +148,87 @@ public class Dice
     
     
     /**
+     * returns the value of the highest die.
+     * will be 0 (??) if dice unrolled?
+     * See whichUnusedDieIsHighest( ) to find out which Die holds this value.
+     */
+    public int lowestUnusedRoll( ) {
+        if ((!rolled) || (usedDiceHowMany==howManyDice)) {
+            return UNROLLED;
+        } else {
+            int lowestRoll = maxDieVal;
+            for (int i=0; i<howManyDice; ++i) {
+                if ((!used[i]) && (dice[i] < lowestRoll)) {
+                    lowestRoll = dice[i];
+                };
+            }
+            return lowestRoll;
+        }
+    } /* highestRoll( ) */
+    
+    
+    /**
+     * returns the value of the highest die.
+     * will be 0 (??) if dice unrolled?
+     * See whichUnusedDieIsHighest( ) to find out which Die holds this value.
+     */
+    public int highestUnusedRoll( ) {
+        if ((!rolled) || (usedDiceHowMany==howManyDice)) {
+            return UNROLLED;
+        } else {
+            int highestRoll = 0;
+            for (int i=0; i<howManyDice; ++i) {
+                if ((!used[i]) && (dice[i] > highestRoll)) {
+                    highestRoll = dice[i];
+                };
+            }
+            return highestRoll;
+        }
+    } /* highestRoll( ) */
+    
+    
+    
+    /**
+     * unlike highestRoll, this tells us WHICH Unused die has the highest value.
+     */
+    public int whichUnusedDieIsLowest( ) {
+        if ((!rolled) || (usedDiceHowMany==howManyDice)) {
+            return NO_SUCH_DIE;
+        } else {
+            int whereLowest = 0;
+            int lowestRoll = maxDieVal;
+            for (int i=0; i<howManyDice; ++i) {
+                if ((!used[i]) && (dice[i] < lowestRoll)) {
+                    whereLowest = i;
+                    lowestRoll = dice[i];
+                };
+            }
+            return whereLowest+1; /* beware OBOB! user expects these dice to be named 1 & 2 */
+        }
+    } /* whichDieIsHighest( ) */
+    
+    
+    /**
+     * unlike highestRoll, this tells us WHICH Unused die has the highest value.
+     */
+    public int whichUnusedDieIsHighest( ) {
+        if ((!rolled) || (usedDiceHowMany==howManyDice)) {
+            return NO_SUCH_DIE;
+        } else {
+            int whereHighest = 0;
+            int highestRoll = 0;
+            for (int i=0; i<howManyDice; ++i) {
+                if ((!used[i]) && (dice[i] > highestRoll)) {
+                    whereHighest = i;
+                    highestRoll = dice[i];
+                };
+            }
+            return whereHighest+1; /* beware OBOB! user expects these dice to be named 1 & 2 */
+        }
+    } /* whichDieIsHighest( ) */
+    
+    
+    /**
      * This for setting a specified individual die.
      * Can't use this to set first two dice at once! Use "roll(5,6)" to do that.
      * This expects dice numbers 1 or 2 (not array indices 0,1!!)
@@ -158,7 +241,7 @@ public class Dice
         }
         if (! legitDiceValue(newRoll)) {
             throw new IllegalArgumentException("Bad dice value '" + newRoll 
-              + "', our dice only can roll values " + minDiceVal + ".." + maxDiceVal);
+              + "', our dice only can roll values " + minDieVal + ".." + maxDieVal);
         }
         if (dice[whichDie - 1] != newRoll) { /* okay, changing a die */
             dice[whichDie - 1] = newRoll;
@@ -182,7 +265,7 @@ public class Dice
      */
     public void roll( ) {
         for (int i=0; i<howManyDice; ++i) {
-            dice[i] = rdice.nextInt(maxDiceVal) + minDiceVal;
+            dice[i] = rdice.nextInt(maxDieVal) + minDieVal;
         }
         rolled = true;
         resetDoubletMovesCountdown( );
@@ -197,11 +280,11 @@ public class Dice
     public void roll(int newRoll1, int newRoll2 ) {
         if (! legitDiceValue(newRoll1)) {
             throw new IllegalArgumentException("Bad dice value '" + newRoll1 
-               + "', our dice only can roll " + minDiceVal + ".." + maxDiceVal);
+               + "', our dice only can roll " + minDieVal + ".." + maxDieVal);
         }
         if (! legitDiceValue(newRoll2)) {
             throw new IllegalArgumentException("Bad dice value '" + newRoll1 
-               + "', our dice only can roll " + minDiceVal + ".." + maxDiceVal);
+               + "', our dice only can roll " + minDieVal + ".." + maxDieVal);
         }
         roll( );
         dice[0] = newRoll1;

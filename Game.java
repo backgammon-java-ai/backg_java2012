@@ -53,6 +53,8 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
     static final int neutral = 0;
     static final int white = 1;
     static final int black = 2;
+    static final int game_unstarted = 3;
+
 
     static final int LEFT_MARGIN = 20;
     static final int TOP_MARGIN = 60;
@@ -61,10 +63,10 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
     BufferedImage b_bimage;
     Graphics2D g_buffer;
     BoardPict myBoardPict = new BoardPict( /* could receive board size param someday! */);
-    
+
     Board myBoard = null; // this gets set up in constructor or die
     AI myAI;
-    private int currentPlayer = white;
+    private int currentPlayer = game_unstarted; /* white; */
 
     // This contains some booleans about the status of the game
     Status status = null;
@@ -90,7 +92,7 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
     static final int btn_SendMessage = 6; /* only if networked */
     static final int btn_NewGame = 7;
     static final int btn_ComputerMove = 8;
-   
+
     // Button labels
     static final String CANCEL = "Cancel Move";
     static final String ROLL_DICE = "Roll Dice";
@@ -108,25 +110,21 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
     static final int MESSAGE_HEIGHT = 80; /* only when networked */
 
 
-    /*=================================================
-     * Game-related Methods 
-     * ================================================*/
 
-
-/**
-    * Game class constructor
-    * assumes you're playing against AI.
-    * (Use the Game(boolean) constructor if you want to set up network game)
-    */
+    /**
+     * Game class constructor
+     * assumes you're playing against AI.
+     * (Use the Game(boolean) constructor if you want to set up network game)
+     */
     public Game() {
         this(false /* networkedTF */);  // merely call fancier constructor
     }
 
 
     /**
-    * Game class constructor
-    * Sets title bar, size, shows the window, and does the GUI
-    */
+     * Game class constructor
+     * Sets title bar, size, shows the window, and does the GUI
+     */
     public Game(boolean networkTF /* networked true/false */) {
         setTitle("JBackgammon");
         setResizable(false); /* someday this can be resizable when all dimensions are relative */
@@ -150,7 +148,8 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
             setSize(myBoardPict.BOARD_WIDTH + GUI_WIDTH/*632*/
                , myBoardPict.BOARD_HEIGHT + BOARD_PADDING + MESSAGE_HEIGHT /*560*/);
         } else {
-            setSize(myBoardPict.BOARD_WIDTH + GUI_WIDTH/*632*/, myBoardPict.BOARD_HEIGHT + BOARD_PADDING);
+            setSize(myBoardPict.BOARD_WIDTH + GUI_WIDTH/*632*/
+               , myBoardPict.BOARD_HEIGHT + BOARD_PADDING);
         }
 
         // Set up double buffering
@@ -335,6 +334,19 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
 
         repaint();
 
+        if (currentPlayer == game_unstarted) {
+            /* Dice 1 is white, Dice 2 is black; high player starts using these 2. 
+               In case of tie, roll again until no tie. So a first move can never be doubles!*/
+               /* maybe this should wait for the players to roll again? */
+               while (myBoard.myDice.isDoubles( ) ) {
+                    myBoard.myDice.roll( );
+                }
+                if (myBoard.myDice.getDie(1) > myBoard.myDice.getDie(2)) {
+                    currentPlayer = white;
+                } else {
+                    currentPlayer = black;
+                }
+        }
         // Check if the player is on the bar and deal with that right away before player tries to move.
         if (myBoard.onBar(currentPlayer)) {
             myBoard.handleBar(currentPlayer);
@@ -837,6 +849,8 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         drawBlots( );
         drawBearStats( );
         drawPipStats( );
+        drawBoardScore( );
+        drawCurrentPlayer( );
 
         if (myBoard.myDice.getRolled()) { // 
             drawCurrentDice( );
@@ -906,7 +920,7 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
      * ================================================*/
 
      /** 
-      * Gets the X coordinate of the specified point (aka "column" or "spike")
+      * Gets the X coordinate(??) of the specified point (aka "column" or "spike")
       */
     public int findX(int point) {
         if (point <= 6) { /* quadrant one is 1..6 (for white, right?) */
@@ -926,7 +940,7 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
 
 
     /** 
-      * Gets the Y coordinate of the specified point (aka "column" or "spike")
+      * Gets the Y coordinate (??) of the specified point (aka "column" or "spike")
       */
      public int findY(int point) {
         if (point <= 12) { /* points 1..12 are in top half of board */
@@ -938,25 +952,12 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         return -1; // wtf??
     } // findY( )
 
-
-
-    public void drawPipStats() {
-        String m1, m2;
-        m1 = "White Pip count: " + myBoard.getPipCount( white );
-        m2 = "Black Pip count: " + myBoard.getPipCount( black );
-
-        g_buffer.setColor(Color.DARK_GRAY);
-        g_buffer.fill(new Rectangle2D.Double(/*left*/455, /*top*/168, /*width*/160, /*height*/30));
-
-        putString(m1, /*X:*/furtherleft, /*Y:*/180, Color.WHITE, /*fontsize:*/12);
-        putString(m2, /*X:*/furtherleft, /*Y:*/195, Color.WHITE, /*fontsize:*/12);
-    } // drawPipStats( )
-
-
        /* shouldn't be final if board is resizable */
         final static int left = GUI_Dim.BTN_LEFT_EDGE; /* 475 */
         final static int furtherleft = GUI_Dim.LEFT_EDGE; /* 455 */
-
+        final static int bearTop = GUI_Dim.STATS_TOP_MARGIN; /* 30 */
+        final static int textLineHeight = GUI_Dim.TEXT_LINE_HEIGHT; /* 18 */
+        
     /**
       * Announce how many pieces each player beared off so far
       */
@@ -965,13 +966,70 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         m1 = "White Pieces Beared Off: " + myBoard.white_bear;
         m2 = "Black Pieces Beared Off: " + myBoard.black_bear;
         
+        g_buffer.setColor(Color.BLACK);
+        g_buffer.fill(new Rectangle2D.Double(left, bearTop, GUI_Dim.GUI_WIDTH, 2*textLineHeight));
+
+        putString(m1, /*X:*/furtherleft, /*Y:*/bearTop + textLineHeight, Color.WHITE, /*fontsize:*/12);
+        putString(m2, /*X:*/furtherleft, /*Y:*/bearTop + 2*textLineHeight, Color.WHITE, /*fontsize:*/12);
+    } // drawBearStats( )
+
+
+    public void drawPipStats() {
+        String m1, m2;
+        m1 = "White Pip count: " + myBoard.getPipCount( white );
+        m2 = "Black Pip count: " + myBoard.getPipCount( black );
+
+        g_buffer.setColor(Color.DARK_GRAY);
+        g_buffer.fill(new Rectangle2D.Double(furtherleft, bearTop + 2*textLineHeight
+           , GUI_Dim.GUI_WIDTH, 2*textLineHeight));
+
+        putString(m1, /*X:*/furtherleft, /*Y:*/bearTop + 3*textLineHeight, Color.WHITE, /*fontsize:*/12);
+        putString(m2, /*X:*/furtherleft, /*Y:*/bearTop + 4*textLineHeight, Color.WHITE, /*fontsize:*/12);
+    } // drawPipStats( )
+
+
+    public void drawBoardScore() {
+        String m1, m2;
+        m1 = "White Board Score: " + myBoard.superMegaHappyScore(myAI.getCautious( ), white );
+        m2 = "Black Board Score: " + myBoard.superMegaHappyScore(myAI.getCautious( ), black );
 
         g_buffer.setColor(Color.BLACK);
-        g_buffer.fill(new Rectangle2D.Double(left, 130, 150, 30));
+        g_buffer.fill(new Rectangle2D.Double(furtherleft, bearTop + 4*textLineHeight
+           , GUI_Dim.GUI_WIDTH, 2*textLineHeight));
 
-        putString(m1, /*X:*/furtherleft, /*Y:*/150, Color.WHITE, /*fontsize:*/12);
-        putString(m2, /*X:*/furtherleft, /*Y:*/165, Color.WHITE, /*fontsize:*/12);
-    } // drawBearStats( )
+        putString(m1, /*X:*/furtherleft, /*Y:*/bearTop + 5*textLineHeight, Color.WHITE, /*fontsize:*/12);
+        putString(m2, /*X:*/furtherleft, /*Y:*/bearTop + 6*textLineHeight, Color.WHITE, /*fontsize:*/12);
+    } // drawBoardScore( )
+
+
+    /**
+     * Puts their name on board ("white" "black" "game_unstarted")
+     */
+    public void drawCurrentPlayer( ) {
+        String m1 = "Current Player: " + nameOf(currentPlayer );
+        String m2;
+        if (myAI != null) {
+            m2 = "AI is playing: " + nameOf(myAI.getColor( ));
+        } else {
+            m2 = "AI is null";
+        }
+        g_buffer.setColor(Color.DARK_GRAY);
+        g_buffer.fill(new Rectangle2D.Double(furtherleft, bearTop + 6*textLineHeight
+           , GUI_Dim.GUI_WIDTH, 1*textLineHeight));
+
+        putString(m1, /*X:*/furtherleft, /*Y:*/bearTop + 7*textLineHeight, Color.WHITE, /*fontsize:*/12);
+        putString(m2, /*X:*/furtherleft, /*Y:*/bearTop + 8*textLineHeight, Color.WHITE, /*fontsize:*/12);
+    }
+
+
+    public String nameOf(int playerColor ) {
+        switch (playerColor) {
+            case white: return "White";
+            case black: return "Black";
+            case game_unstarted: return "Game Unstarted";
+            default: return "??";
+        }
+    } /* currentPlayerName( ) */
 
 
     private void putString(String message, int x, int y, Color c, int fontsize) {
@@ -983,21 +1041,30 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
 
      /**
       * Driver, organizes data and color before calling general purpose "drawDice"
+      * [ ]For formal game start we would want to draw one black die and one white die.
       */
     private void drawCurrentDice( ) {
         int dice1x = GUI_Dim.DICE1_LEFT;
         int dice2x = GUI_Dim.DICE2_LEFT;
         int diceTop = GUI_Dim.DICE_TOP;
-        Color diceColor, dotColor;
+        Color diceColor1 = myBoardPict.clr_white;
+        Color diceColor2 = myBoardPict.clr_white;
+        Color dotColor1 = myBoardPict.clr_black;
+        Color dotColor2 = myBoardPict.clr_black;
         if (currentPlayer==black) {
-            diceColor = myBoardPict.clr_black;
-            dotColor = myBoardPict.clr_white;
-        } else {
-            diceColor = myBoardPict.clr_white;
-            dotColor = myBoardPict.clr_black;
+            diceColor1 = diceColor2 = myBoardPict.clr_black;
+            dotColor1 = dotColor2 = myBoardPict.clr_white;
+//        } else if (currentPlayer==white) {
+//            diceColor1 = diceColor2 = myBoardPict.clr_white;
+//            dotColor1 = dotColor2 = myBoardPict.clr_black;
+        } else if (currentPlayer==game_unstarted) {
+//            diceColor1 = myBoardPict.clr_white;
+//            dotColor1 = myBoardPict.clr_black;
+            diceColor2 = myBoardPict.clr_black;
+            dotColor2 = myBoardPict.clr_white;
         }
-        drawDice(myBoard.myDice.getDie(1), dice1x, diceTop,  diceColor, dotColor);
-        drawDice(myBoard.myDice.getDie(2), dice2x, diceTop,   diceColor, dotColor);
+        drawDice(myBoard.myDice.getDie(1), dice1x, diceTop, diceColor1, dotColor1);
+        drawDice(myBoard.myDice.getDie(2), dice2x, diceTop, diceColor2, dotColor2);
     } /* drawCurrentDice( ) */
 
 
@@ -1178,7 +1245,7 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
             g_buffer.setColor(myBoardPict.clr_black);
             g_buffer.fill(new Ellipse2D.Double(left, topBlack + 5, blotSize, blotSize));
             if (myBoard.black_bar > 1) {
-                putString(String.valueOf(myBoard.black_bar), /*X:*/left+21, /*Y:*/topBlack + 85, Color.RED, /*fontsize:*/15);
+                putString(String.valueOf(myBoard.black_bar), /*X:*/left+21, /*Y:*/topBlack + 35, Color.RED, /*fontsize:*/15);
             }
         }
         
@@ -1186,7 +1253,7 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
             g_buffer.setColor(myBoardPict.clr_white);
             g_buffer.fill(new Ellipse2D.Double(left, topWhite + 5, blotSize, blotSize));
             if (myBoard.white_bar > 1) {
-                putString(String.valueOf(myBoard.white_bar), /*X:*/left+21, /*Y:*/topWhite + 85, Color.RED, /*fontsize:*/15);
+                putString(String.valueOf(myBoard.white_bar), /*X:*/left+21, /*Y:*/topWhite + 35, Color.RED, /*fontsize:*/15);
             }
         }
 
@@ -1317,7 +1384,7 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         // Reset Game data /
         myBoard.myDice.reset( ); /* puts to unrolled, unused, countdown=0 */ 
         myBoard.setOldPoint( 0 );
-        currentPlayer = white;
+        currentPlayer = game_unstarted; /* = white; */
     
         // Reset buttons
         FButton[btn_CancelMove].setEnabled(false);
