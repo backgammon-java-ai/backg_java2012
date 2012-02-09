@@ -15,7 +15,7 @@ public class GameTest
 {
     Game g;
     Board b;
-    int ai = Board.black; /* playerColor */
+    int aiColor = Board.black; /* playerColor */
     
 
     /**
@@ -64,10 +64,10 @@ public class GameTest
         assertNotNull(b);
         try {
             b.makeAlmostDoneGame( );
-            g.setCurrentPlayer(ai);
+            g.setCurrentPlayer(aiColor);
             b.myDice.roll(3,4);
-            assertTrue(b.canBearOff(ai));
-            assertFalse(b.onBar(ai));
+            assertTrue(b.canBearOff(aiColor));
+            assertFalse(b.onBar(aiColor));
         } catch(Exception e) {
             /* isn't there a way to test without catching exceptions? */
             fail(e.toString( ));
@@ -81,7 +81,7 @@ public class GameTest
         b = g.getMyBoard();
         try {
             b.make3BlotGame( );/* black on 20 & 12 ends at 0, white on 4 ends past 24 */
-            assertEquals(ai, b.getColorOnPoint(12));
+            assertEquals(aiColor, b.getColorOnPoint(12));
         } catch(Exception e) {
             /* isn't there a way to test without catching exceptions? */
             fail(e.toString( ));
@@ -113,7 +113,7 @@ public class GameTest
         LocList ll1 = b.allMoveableBlotLocs(Board.white);
         assertNotNull(ll1);
         assertEquals(1, ll1.size());
-        g.setCurrentPlayer(ai);
+        g.setCurrentPlayer(aiColor);
         LocList ll2 = b.allMoveableBlotLocs(Board.black);
         assertNotNull(ll2);
         assertEquals(2, ll2.size());
@@ -126,8 +126,8 @@ public class GameTest
         g = new Game(false);
         b = g.getMyBoard();
         assertNotNull(b);
-        g.setCurrentPlayer(ai);
-        assertEquals(ai,g.getCurrentPlayer( ));
+        g.setCurrentPlayer(aiColor);
+        assertEquals(aiColor,g.getCurrentPlayer( ));
     }
     
 
@@ -139,11 +139,11 @@ public class GameTest
             b.make3BlotGame( );/* black on 20 & 12 ends at 0, white on 4 ends past 24 */
             assertNotNull(b);
             b.myDice.roll(3, 6);
-            g.setCurrentPlayer(ai);
-            LocList ll1 = b.allMoveableBlotLocs(ai);
+            g.setCurrentPlayer(aiColor);
+            LocList ll1 = b.allMoveableBlotLocs(aiColor);
             assertNotNull(ll1);
             assertEquals("[12, 20]", ll1.toString());
-            java.util.ArrayList<PartialMove> allpm1 = b.allLegalPartialMoves(ai);
+            java.util.ArrayList<PartialMove> allpm1 = b.allLegalPartialMoves(aiColor);
             assertNotNull(allpm1);
         } catch(Exception e) {
             /* isn't there a way to test without catching exceptions? */

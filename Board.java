@@ -208,21 +208,25 @@ public class Board {
     
     
     /**
-     * Starting position in which it is easy for players to hit each other
+     * Symmetrical starting position in which it is easy for players to hit each other
+     * white singles on 5,7,9,13
+     * black singles on (absolute) 20,18,16,12 [from black POV == 5,7,9,13]
      * (Handy for testing!)
      */
     public void makeEasyHitStartingBoard( )  throws BadBoardException {
         makeBoardWithoutBlots( );
-        setPoint(1, /* howMany */ 1, white); 
-        setPoint(6, /* howMany */ 1, black);
-        setPoint(8, /* howMany */ 1, black);
-        setPoint(12, /* howMany */ 1, white);
-        setPoint(13, /* howMany */ 1, black);
-        setPoint(17, /* howMany */ 1, white);
-        setPoint(19, /* howMany */ 1, white);
-        setPoint(24, /* howMany */ 1, black);
-        black_bar = 1;
-        black_bear = 10;
+        setPoint(5, /* howMany */ 1, white); 
+        setPoint(7, /* howMany */ 1, white);
+        setPoint(9, /* howMany */ 1, white);
+        setPoint(13, /* howMany */ 1, white);
+        
+        setPoint(20, /* howMany */ 1, black);
+        setPoint(18, /* howMany */ 1, black);
+        setPoint(16, /* howMany */ 1, black);
+        setPoint(12, /* howMany */ 1, black);
+        
+        black_bar = 0;
+        black_bear = 11;
         white_bar = 0;
         white_bear = 11;
         checkForBadNumberOfBlots( white );
@@ -793,6 +797,33 @@ public class Board {
         }
         return whichColorOnPoint[pointNum];
     } // getColorOnPoint
+    
+    
+    /**
+     * Tells us which color is on the specified point (black, white, [??or neutral??]).
+     * Unlike getColorOnPoint(ptNum) this can be used for BAR and BEAR_OFF zones!
+     * This is stupid: if we know a color, why are we asking?
+     */
+    public int getColorOnPoint(int pointNum, int playerColor) {
+        if (playerColor == neutral) {
+            return getColorOnPoint(pointNum);
+        }
+        /* these check for legitPlayerColor, allow points 1..24 and BAR and BEAR */
+        if ( (! legitStartLoc(pointNum, playerColor) ) && (! legitEndLoc(pointNum, playerColor))) {
+            throw new IllegalArgumentException("Bad pointNum '" + pointNum + "'");
+        }
+        if ((playerColor==white) && (pointNum == WHITE_BAR_LOC)) {
+            return white;
+        } else if ((playerColor==black) && (pointNum == BLACK_BAR_LOC)) {
+            return black;
+        } else if ((playerColor==white) && (pointNum == WHITE_BEAR_OFF_LOC)) { /* not PAST BEAR, nobody parks there */
+            return white;
+        } else if ((playerColor==black) && (pointNum == BLACK_BEAR_OFF_LOC)) { /* not PAST BEAR, nobody parks there */
+            return black;
+        } else {
+            return whichColorOnPoint[pointNum];
+        }
+    } // getColorOnPoint
 
 
     /**
@@ -818,6 +849,7 @@ public class Board {
                 && ((pointNum == BLACK_BEAR_OFF_LOC) || (pointNum == BLACK_PAST_BEAR_OFF_LOC))) {
             return black_bear;
         }
+        /* okay, we know it is not BAR nor BEAR, so confirm playerColor */
         if (getColorOnPoint(pointNum) == playerColor) {            
             return howManyOnPoint[pointNum];
         } else {
@@ -850,8 +882,8 @@ public class Board {
         } else if (startPointNum == BLACK_BAR_LOC) {
             playerColor = black;
         } else if (! legitPointNum(startPointNum)) {
-             throw new IllegalArgumentException("Bad PointNum '" + startPointNum + "'");
-        } else {
+             throw new IllegalArgumentException("Bad PointNum '" + startPointNum + "' in takeOneBlotOff");
+        } else { /* we know it is not BAR. What about BEAR? */
             playerColor = getColorOnPoint(startPointNum);
         }
         int howMany = getHowManyBlotsOnPoint(startPointNum);
@@ -934,10 +966,13 @@ public class Board {
     * but "moveBlot( from, to, color)" works when the fromLoc is a bar.
     */
     public void moveToBar(int pointNum, int bounceeColor) {
-        if ( ! legitStartLoc(pointNum,bounceeColor)) { // also checks if legitPlayerColor
-             throw new IllegalArgumentException("Bad pointNum '" + pointNum + "'in moveToBar!");
+        if ( ! legitPointNum( pointNum )) { /* strong test, no BAR, no BEAR */
+            throw new IllegalArgumentException("Bad pointNum '" + pointNum + "'in moveToBar!");
         }
-        if (getColorOnPoint(pointNum)!=bounceeColor) {
+        if ( ! legitPlayerColor(bounceeColor)) { 
+             throw new IllegalArgumentException("Bad playerColor '" + bounceeColor + "'in moveToBar!");
+        }
+         if (getColorOnPoint(pointNum)!=bounceeColor) {
             throw new IllegalArgumentException("There's no " + colorName(bounceeColor) 
                 + " blot on point '" + pointNum + "' to move to bar!");
         }

@@ -15,7 +15,7 @@ public class BoardTest {
 
     Game g;
     Board b;
-    int ai = Board.black; /* playerColor */
+    int aiColor = Board.black; /* playerColor */
 
     
     /**
@@ -61,11 +61,11 @@ public class BoardTest {
             fail(e.toString( ));
         }
 
-        g.setCurrentPlayer(ai);
+        g.setCurrentPlayer(aiColor);
         b.myDice.roll( );
-        assertEquals(true, b.solitaryBlotOnPoint(12, ai));
-        assertEquals(true, b.canLandOn(12, ai));
-        assertEquals(true, b.canMove(ai));
+        assertEquals(true, b.solitaryBlotOnPoint(12, aiColor));
+        assertEquals(true, b.canLandOn(12, aiColor));
+        assertEquals(true, b.canMove(aiColor));
     }
     
     
@@ -85,23 +85,23 @@ public class BoardTest {
             fail(e.toString( ));
         }
 
-        g.setCurrentPlayer(ai);
+        g.setCurrentPlayer(aiColor);
         b.myDice.setDie(1,1); /* alternative syntax:b1.myDice.roll(1,2) */
         b.myDice.setDie(2,6);
-        assertEquals(true, b.solitaryBlotOnPoint(12, ai));
-        assertEquals(true, b.canLandOnExact(12, ai));
-        assertEquals(true, b.canLandOn(12, ai));
-        assertEquals(true, b.canMove(ai));
+        assertEquals(true, b.solitaryBlotOnPoint(12, aiColor));
+        assertEquals(true, b.canLandOnExact(12, aiColor));
+        assertEquals(true, b.canLandOn(12, aiColor));
+        assertEquals(true, b.canMove(aiColor));
         assertEquals(1, b.getHowManyBlotsOnPoint(12));
-        b.handlePoint(12, ai);
+        b.handlePoint(12, aiColor);
         assertEquals(11, b.getPotDest(1));
         assertEquals(6, b.getPotDest(2));
-        b.doPartialMove(12,11,/*whichDie:*/1,ai);
-        assertEquals(true, b.solitaryBlotOnPoint(11, ai));
-        b.handlePoint(11, ai);
-        b.doPartialMove(20,14,/*whichDie:*/2,ai);
-        assertEquals(true, b.solitaryBlotOnPoint(11, ai));
-        assertEquals(true, b.solitaryBlotOnPoint(14, ai));
+        b.doPartialMove(12,11,/*whichDie:*/1,aiColor);
+        assertEquals(true, b.solitaryBlotOnPoint(11, aiColor));
+        b.handlePoint(11, aiColor);
+        b.doPartialMove(20,14,/*whichDie:*/2,aiColor);
+        assertEquals(true, b.solitaryBlotOnPoint(11, aiColor));
+        assertEquals(true, b.solitaryBlotOnPoint(14, aiColor));
     }
     
     
@@ -122,21 +122,21 @@ public class BoardTest {
             fail(e.toString( ));
         }
 
-        g.setCurrentPlayer(ai);
+        g.setCurrentPlayer(aiColor);
         b.myDice.roll(5,6); /* alternative syntax:b1.myDice.setDie(1,5) setDie(2,6)*/
-        assertEquals(true, b.solitaryBlotOnPoint(6, ai));
-        assertEquals(true, b.canLandOnExact(6, ai));
-        assertEquals(true, b.canLandOn(6, ai));
-        assertEquals(true, b.canMove(ai));
+        assertEquals(true, b.solitaryBlotOnPoint(6, aiColor));
+        assertEquals(true, b.canLandOnExact(6, aiColor));
+        assertEquals(true, b.canLandOn(6, aiColor));
+        assertEquals(true, b.canMove(aiColor));
         assertEquals(1, b.getHowManyBlotsOnPoint(6));
-        b.handlePoint(6, ai);
+        b.handlePoint(6, aiColor);
         assertEquals(1, b.getPotDest(1));
         assertEquals(Board.BLACK_BEAR_OFF_LOC, b.getPotDest(2));
-        b.doPartialMove(6,6,/*whichDie:*/2,ai);
-        assertEquals(false, b.solitaryBlotOnPoint(6, ai));
-        assertTrue(b.needsInexactRolls(ai));
-        b.handlePoint(4, ai);
-        b.doPartialMove(4,5,/*whichDie:*/1,ai);
+        b.doPartialMove(6,6,/*whichDie:*/2,aiColor);
+        assertEquals(false, b.solitaryBlotOnPoint(6, aiColor));
+        assertTrue(b.needsInexactRolls(aiColor));
+        b.handlePoint(4, aiColor);
+        b.doPartialMove(4,5,/*whichDie:*/1,aiColor);
         assertEquals(4, b.getHowManyBlotsOnPoint(4));
         assertEquals(14, b.black_bear);
     }
@@ -159,14 +159,14 @@ public class BoardTest {
             fail(e.toString( ));
         }
 
-        g.setCurrentPlayer(ai);
+        g.setCurrentPlayer(aiColor);
         b.myDice.roll(5,6); /* alternative syntax:b1.myDice.setDie(1,5) setDie(2,6)*/
-        assertEquals(true, b.solitaryBlotOnPoint(6, ai));
-        assertEquals(true, b.canLandOnExact(6, ai));
-        assertEquals(true, b.canLandOn(6, ai));
-        assertEquals(true, b.canMove(ai));
+        assertEquals(true, b.solitaryBlotOnPoint(6, aiColor));
+        assertEquals(true, b.canLandOnExact(6, aiColor));
+        assertEquals(true, b.canLandOn(6, aiColor));
+        assertEquals(true, b.canMove(aiColor));
         assertEquals(1, b.getHowManyBlotsOnPoint(6));
-        b.handlePoint(6, ai);
+        b.handlePoint(6, aiColor);
         assertEquals(1, b.getPotDest(1));
         assertEquals(Board.BLACK_BEAR_OFF_LOC, b.getPotDest(2));
     }
@@ -186,9 +186,9 @@ public class BoardTest {
             fail(e.toString( ));
         }
 
-        g.setCurrentPlayer(ai);
+        g.setCurrentPlayer(aiColor);
         b.myDice.roll(5,6); /* alternative syntax:b1.myDice.setDie(1,5) setDie(2,6)*/
-        assertEquals(true, b.solitaryBlotOnPoint(6, ai));
+        assertEquals(true, b.solitaryBlotOnPoint(6, aiColor));
         b.takeOneBlotOffPoint(6);
         assertEquals(0, b.getHowManyBlotsOnPoint(6));
     }
@@ -207,28 +207,28 @@ public class BoardTest {
             fail(e.toString( ));
         }
 
-        g.setCurrentPlayer(ai);
-        assertEquals(5.25, b.howImportantIsThisPoint(20, ai, g.myAI.getCautious( )), 
+        g.setCurrentPlayer(aiColor);
+        assertEquals(5.25, b.howImportantIsThisPoint(20, aiColor, g.myAI.getCautious( )), 
             /*how close?*/0.01);
-        assertEquals(13006.75, b.getAllPointScore(ai, /*cautious*/0.5), 
+        assertEquals(13006.75, b.getAllPointScore(aiColor, /*cautious*/0.5), 
             /*how close?*/0.01);
         assertEquals(4.25, b.howImportantIsThisPoint(4, Board.white, /*cautious*/0.5), 
             /*how close?*/0.01);
         assertEquals(14004.25, b.getAllPointScore(Board.white, /*cautious*/0.5), 
             /*how close?*/0.01);
-        assertEquals(-997.5, b.superMegaHappyScore(/*cautious:*/g.myAI.getCautious( ), ai ), 
+        assertEquals(-997.5, b.superMegaHappyScore(/*cautious:*/g.myAI.getCautious( ), aiColor ), 
             /*how close?*/0.01);
-        System.out.println(b.superMegaHappyScore(/*cautious:*/g.myAI.getCautious( ), ai ));
+        System.out.println(b.superMegaHappyScore(/*cautious:*/g.myAI.getCautious( ), aiColor ));
         /* let's test a new score for another board layout...*/
     }
     
     
     @Test
     public void testLegitEndLoc( ) {
-        assertTrue(Board.legitEndLoc(15,ai));
-        assertFalse(Board.legitEndLoc(Board.ILLEGAL_MOVE,ai));
-        assertFalse(Board.legitEndLoc(Board.howManyPoints + 3,ai));
-        assertFalse(Board.legitEndLoc(-3,ai));
+        assertTrue(Board.legitEndLoc(15,aiColor));
+        assertFalse(Board.legitEndLoc(Board.ILLEGAL_MOVE,aiColor));
+        assertFalse(Board.legitEndLoc(Board.howManyPoints + 3,aiColor));
+        assertFalse(Board.legitEndLoc(-3,aiColor));
     }
 } /* class BoardTest */
 
