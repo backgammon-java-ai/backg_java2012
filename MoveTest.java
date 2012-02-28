@@ -54,7 +54,7 @@ public class MoveTest
         pmlist.add(pm1);
         pmlist.add(pm2);
         try {
-            Move move1 = new Move(pmlist, g1.getCurrentPlayer( ), g1);
+            Move move1 = new Move(pmlist, g1.getCurrentPlayer( ), g1.myBoard);
             System.out.println("move1==" + move1.toString( ) );
             ArrayList<PartialMove> myPartials = move1.getMyPartials( );
             assertEquals(2, myPartials.size( ));

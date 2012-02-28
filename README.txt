@@ -14,7 +14,10 @@ HOW TO START THIS PROJECT:
   In BlueJ you can instantiate "JBackgammon(false)" (boolean says whether networked or not)
 or use Safari or Firefox to browse JBackgammonApplet.html (Chrome doesn't work)
 or in terminal say "java JBackgammon" in this directory. 
-(handy compile option:   javac -Xlint:unchecked JBackgammon.java
+Handy compile option:   javac -Xlint:unchecked JBackgammon.java
+There is a jar that works on mac if double-clicked.
+(The html page gets security exceptions re bluej core .jars.)
+
 
 AUTHORS: 
 Original code from JBackgammon (http://jbackgammon.sf.net) [website nonexistent in 2012], 
@@ -45,8 +48,11 @@ Still not sure if point 25 is being used for anything. Program dies if it doesn'
 
 
 ...Bugs
+[ ]Should AI not only add up happiness about his own blots but unhappiness about where the opponent's
+blots are (which is NOT the same thing as opponent's happiness about where his blots are, which
+might also be included, and even include opponent's unhappiness of where our blots are?)
 [ ]AI doesn't know to come in from bar: maybe "allLegalPartialMoves" is only looking at points
-instead of looking at bar.
+instead of looking at bar. {Workaround: can bring AI blots in manually!}
 Bugs below here might be gone, now!
 [ ]testHandlePoint2a() shows that AI doesn't know to bear off, AND chooses a move that can't
 be used because AI is not taking blot on point 6 off first with that 6 bearoff, and is instead
@@ -118,7 +124,7 @@ Fixed: obob in setUsed( ).
 
 
 ...High priority
-[ ]Board UI should clearly show whose move it is!
+
 [ ]See how long it takes to create and score and rank 100 (non-default) Boards!
 [ ]The value of a board should include pip count factored in some how! Oh, it does implicitly 
 since there will be fewer protection points with a blot bumped out to the bar.
@@ -147,6 +153,7 @@ So maybe score = (s * d)?   or s + d?
 
 
 ...Future Plans:
+[ ]for iPad interface: drag pieces with zoom-in for aiming at the target
 [ ]Mark the dice that have been used.
 [ ]Do formal start procedure: Each player rolls one dice (one white, one black): high number goes
 first using those two rolls. (For tie, roll again.)
@@ -184,6 +191,9 @@ Perhaps this could also show how many steps left before finishing.
 
 
 ...History
+2012 Feb 9: Board UI shows whose move it is! Human can't come in from bar,
+and AI has to be brought in from bar manually.
+
 2012 Feb 1: compiles, computer makes its own partial moves (user has to press 
 "Computer Move" button twice (or 4 times for doubles), dumb AI is still taking 
 first possible move. If the first possible move is attempt to bear off (and other

@@ -44,6 +44,7 @@ public class Board {
     int howManyOnPoint[ ]; /* just for board points (1..24), Beware: numbered 1..24, NOT 0..23! */
     int whichColorOnPoint[ ];
 
+        /* These should be arrays for multicolor calling convenience! */
     int white_bar = 0; /* how many blots on white's bar */
     int black_bar = 0;
     int white_bear = 0; /* how many blots white has "beared off" the board */
@@ -65,7 +66,8 @@ public class Board {
     public static final int neutral = 0;
     public static final int white = 1;
     public static final int black = 2;
-    
+    public  static final int game_unstarted = 3;
+
     
     /* scoring, maybe should be part of a separate scoring class?? */
     public final static double valueOfBearedOffPiece = 1000.0; /* for convenience of math & testing */
@@ -376,7 +378,7 @@ public class Board {
             myGame.comm.sendmove(old_point, Board.WHITE_BEAR_OFF_LOC);
         }
 
-        myGame.FButton[myGame.btn_BearOff].setEnabled(false);
+        myGame.fButton[myGame.btn_BearOff].setEnabled(false);
 
         boolean won = false; // did someone win
         if (!myGame.status.networked) {
@@ -439,6 +441,7 @@ public class Board {
      * Mark possible escapes and forfeitTurn if there are none.
      * This is automatically called by Game.doRoll( )   if   Board.onBar(Game.current_player)
      * and doRoll otherwise checks whether a player canMove( ) and forfeitTurns for them if they can't move! 
+     * ?? Does AI hear this? Respond?
      */
     public void handleBar(int playerColor) {
         int escape1;
@@ -454,8 +457,8 @@ public class Board {
 
         // Can they escape?
         if ( (! myDice.getUsedDie( 1 )) && canLandOn(escape1,playerColor) ) {
-            myGame.FButton[myGame.btn_AtPotentialMove1].drawOnPoint(escape1); // potential move 1
-            myGame.FButton[myGame.btn_AtPotentialMove1].setVisible(true); // show this as possible move
+            myGame.fButton[myGame.btn_AtPotentialMove1].drawOnPoint(escape1); // potential move 1
+            myGame.fButton[myGame.btn_AtPotentialMove1].setVisible(true); // show this as possible move
             potDest1 = escape1;
             if (playerColor==white) {
                 old_point = WHITE_BAR_LOC;
@@ -465,8 +468,8 @@ public class Board {
             myGame.status.point_selected = true;
         }
         if ( (!myDice.getUsedDie(2)) && canLandOn(escape2,playerColor) ) {
-            myGame.FButton[myGame.btn_AtPotentialMove2].drawOnPoint(escape2); // potential move 2
-            myGame.FButton[myGame.btn_AtPotentialMove2].setVisible(true);
+            myGame.fButton[myGame.btn_AtPotentialMove2].drawOnPoint(escape2); // potential move 2
+            myGame.fButton[myGame.btn_AtPotentialMove2].setVisible(true);
             potDest2 = escape2;
             if (playerColor==white) {
                 old_point = WHITE_BAR_LOC;
@@ -678,16 +681,20 @@ public class Board {
     /**
      * This does the math of moving: given a starting point & a roll distance (one die), 
      * tells the end of the move.
-     * Shouldn't this possibly return ILLEGAL_MOVE ??
-     * For black, use subtraction!?? I'll throw exception for negative steps!
+     * Can return ILLEGAL_MOVE if trying to bear out when not legal,
+     * if trying to go past exact bear out when exact dice are required, or
+     * if landing on a point protected by opponent.
      * For white, simple math in the middle of the board (endpoint = start + steps)
      * but trickier at the end since after final point is the bar.
+     * Positive numbers must be used for black, too. This knows for black to use 
+     * subtraction behind the scenes. I'll throw exception for negative 'steps'!
      * This just calculates but doesn't actually try to move any blots.
      * Is handy for creating partialMoves (which have start, roll, end ).
      *
-     * Note: The endpoint might not be legally landable upon (if protected by enemy). This doesn't check.
+     * Note: The endpoint has been checked for legality.
      * 
-     * Maybe this could decide whether to return BEAR_OFF_LOC even when it is going PAST_BEAR_OFF_LOC, but
+     * Maybe this could decide whether to return BEAR_OFF_LOC even when 
+     * it is going PAST_BEAR_OFF_LOC, but
      * for now I'll return BEAR_OFF_LOC for exact bear off and PAST_BEAR_OFF_LOC if overshooting...
      */
     public /*static*/ int endPointMovingFrom( int startPoint, int steps, int playerColor/*, Board board*/) 
@@ -718,6 +725,8 @@ public class Board {
                 endPoint = startPoint - steps;
             }
         }
+//?? Shouldn't this fixOutOfBounds( ) now so that endpoint gets explicitly
+//?? Set to constant rather than getting it implicitly by math!!
 //        if (legitPointNum(endPoint)) { /* checks in 1..24, not BAR nor BEAR nor PAST_BEAR */
             /* Easy: is 1 .. 24 so we're done, right? Unless the point is blocked... */
             /* if "canLandOn" is as good as I think it is, it is all we need. */
@@ -833,7 +842,7 @@ public class Board {
     			repairedEndPoint = BLACK_PAST_BEAR_OFF_LOC;
     		}
     	} else {
-    	    throw new IllegalArgumentException("Bad playerColor '" + playerColor + "' in fixOutOfBounds");
+    	   throw new IllegalArgumentException("Bad playerColor '" + playerColor + "' in fixOutOfBounds");
     	}
     	return repairedEndPoint;
     } /* fixOutOfBounds */
@@ -1417,7 +1426,7 @@ public class Board {
          theScore = getAllPointScore(playerColor, cautious)  
              - getAllPointScore(opponentColor, cautious);
              /*     + pipCount(playerColor) - pipCount(opponentColor); */
-             /* not including pipcount for now since it is visible on board */
+             /* not including pipcount for now since it is visible on board. */
          /* Should we score any CHANGE in opponent's pipcount? 
           * Not only that, but how important the point was to them that they lost 
           * though that latter idea contained in their AllPointScore */;         
@@ -1706,13 +1715,13 @@ public class Board {
             // If a move is valid, enable the button to move to it. Perhaps this stuff should be in Game
             if ( (canLandOn(potDest1,playerColor)) && (! myDice.getUsedDie( 1))) {
                 if ((1 <= potDest1) && (potDest1 <= howManyPoints)) {
-                    myGame.FButton[myGame.btn_CancelMove].setEnabled(true);
-                    myGame.FButton[myGame.btn_AtPotentialMove1].drawOnPoint(potDest1);
+                    myGame.fButton[myGame.btn_CancelChoice].setEnabled(true);
+                    myGame.fButton[myGame.btn_AtPotentialMove1].drawOnPoint(potDest1);
                     myGame.status.point_selected = true;
                 } else {
                     // The possible move leads to bearing off
-                    myGame.FButton[myGame.btn_CancelMove].setEnabled(true); 
-                    myGame.FButton[myGame.btn_BearOff].setEnabled(true);
+                    myGame.fButton[myGame.btn_CancelChoice].setEnabled(true); 
+                    myGame.fButton[myGame.btn_BearOff].setEnabled(true);
                     myGame.status.point_selected = true;
                 }
             } else {
@@ -1721,14 +1730,14 @@ public class Board {
             
             if ( (canLandOn(potDest2,playerColor)) && (! myDice.getUsedDie( 2 ))) {
                 if ((1 <= potDest2) && (potDest2 <= howManyPoints)) {
-                    myGame.FButton[myGame.btn_CancelMove].setEnabled(true);
-                    myGame.FButton[myGame.btn_AtPotentialMove2].drawOnPoint(potDest2);
+                    myGame.fButton[myGame.btn_CancelChoice].setEnabled(true);
+                    myGame.fButton[myGame.btn_AtPotentialMove2].drawOnPoint(potDest2);
                     myGame.status.point_selected = true;
                 } else {
                     // The possible move leads to bearing off
                     // if (potDest2 == WHITE_BEAR_OFF_LOC   or  BLACK_BEAR_OFF_LOC
-                    myGame.FButton[myGame.btn_CancelMove].setEnabled(true);
-                    myGame.FButton[myGame.btn_BearOff].setEnabled(true);
+                    myGame.fButton[myGame.btn_CancelChoice].setEnabled(true);
+                    myGame.fButton[myGame.btn_BearOff].setEnabled(true);
                     myGame.status.point_selected = true;
                 }
             } else {
@@ -1808,10 +1817,11 @@ public class Board {
 
     /**
      * Saving a list of the partial moves that can be made from a particular point.
-     * Might be empty list. 
+     * Might return empty list. 
      * Called by allLegalPartialMoves( )
      * Only gets called if there are blots of myColor on myPoint, supposedly.
-     * This is counting on the move math calculator (endPointMovingFrom:) to handle bar and bear properly!
+     * This is counting on the move math calculator (endPointMovingFrom:)
+     * to handle bar and bear properly, which it supposedly does.
      */
     ArrayList<PartialMove> legalPartialMovesFromPoint(int myPoint, int playerColor) {
         handlePoint( myPoint, playerColor ); 
@@ -1826,7 +1836,7 @@ public class Board {
         ArrayList<PartialMove> bunchOfPartialMoves = new ArrayList<PartialMove>( );   
                 /* for storing & returning a collection of "PartialMove"s */
         if (! myDice.getUsedDie(1) ) {
-            int endPoint1 = /*Board.*/endPointMovingFrom(myPoint, dice1, playerColor/*, this*/);
+            int endPoint1 = endPointMovingFrom(myPoint, dice1, playerColor);
             // might be ILLEGAL_MOVE
             System.out.println("for starting at " + myPoint + " with roll:" + dice1 
                  + " estimated move to:" + endPoint1);
@@ -1839,7 +1849,7 @@ public class Board {
         
         if (! myDice.getUsedDie(2)) {
             /* building move2, should check whether it is legal */
-            int endPoint2 = endPointMovingFrom(myPoint, dice2, playerColor/*, this /*board*/);
+            int endPoint2 = endPointMovingFrom(myPoint, dice2, playerColor);
             if (endPoint2 != ILLEGAL_MOVE) { // equiv  if ( canLandOn(endPoint2, playerColor) {
                 PartialMove fakePartialMove2 
                    = new PartialMove( myPoint, dice2, endPoint2, myGame, playerColor,/*whichDie:*/2 );           
@@ -1856,18 +1866,22 @@ public class Board {
      * Calculate just one legal move. 
      * This is just an attempt to sneak up on designing "allLegalMoves( )".
      * Not for real use!
-     * Note: this is a "full" move, using all the dice. 
+     * Beware: might return null.  ?? Should there be a nullMove object?
+     * Note: this recurses until building and returning a "complete" move, using all the dice. 
      * This is not just a partial move (which use one die).
      */
-    Move aLegalMove( int playerColor /*, Game myGame*/) throws BadBoardException, BadMoveException {
+    Move aLegalMove( int playerColor, Move stepsSoFar) 
+            throws BadBoardException, BadMoveException {
         ArrayList<PartialMove> partials1 = allLegalPartialMoves(playerColor );
+        if (partials1.isEmpty() ) {
+            return null;
+        }
         PartialMove myPartial1 = partials1.get(0);
         
-        Board partialBoard = new Board(myGame, this); /* a copy of this including dice values */
+        Board partialBoard = new Board(myGame, this); 
+            /* a copy of this board, including dice values */
         
         partialBoard.doPartialMove(myPartial1); 
-        /*maybe doPartialMove could refrain from switching playerColor 
-        and therefore be in Board class...*/
         
         ArrayList<PartialMove> partials2 =  partialBoard.allLegalPartialMoves(playerColor);
         PartialMove myPartial2 = partials2.get(0);
@@ -1879,9 +1893,8 @@ public class Board {
             // get more moves
             throw new IllegalArgumentException("not done calculating doubles moves");
         }
-        return new Move( allMyPartials, playerColor, myGame);
+        return new Move( allMyPartials, playerColor, partialBoard/* ?* myGame*/);
     } /* aLegalMove( ) */
-
 
 
 
@@ -1971,7 +1984,8 @@ public class Board {
      * Note: if this is the final partial move, this switches players by calling Game.endTurn( )!
      * This doesn't seem to be checking the legality of the move.
      */
-    /*private*/ void doPartialMove(int fromPoint, int toPoint, int whichDie, int playerColor) {
+    /*private*/ void doPartialMove(int fromPoint, int toPoint,
+                 int whichDie, int playerColor) {
         /* In networked mode: 25 = to bar, 26 = bear off */
         if ( ! Board.legitStartLoc( fromPoint, playerColor )) { /* also checks legitPlayerColor */
             throw new IllegalArgumentException("Can't start moving from point '" + fromPoint + "'");
@@ -2290,5 +2304,5 @@ public class Board {
         }
     } /* canOnlyMoveFromBar( ) */
     
-    
-} // class Board
+    // class Board 
+}

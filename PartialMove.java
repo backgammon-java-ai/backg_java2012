@@ -1,11 +1,10 @@
-
 /**
- * Immutable!
+ * Immutable! (Only has constructor and private fields and getters.)
  * Holds a "single" part of a move.
  * (one blot moves from point or bar to point or bear off)
  * 
  * @author (Mike Roam) 
- * @version (2011 dec 6)
+ * @version (2012 Feb 11)
  */
 public class PartialMove implements Comparable<PartialMove>
 {
@@ -15,26 +14,30 @@ public class PartialMove implements Comparable<PartialMove>
     there are no pieces that can use that full higher roll */
     private final int whichDie;  /* Game.supermove( ) wants to know which die you're using */
     
-    private final int start; /* note: 0 means from bar */
-    private final int end; 
-    private final int color;
-    private final Game myGame;
+   /* note: start and end can be 1..Board.howManyPoints(==24) or
+        use Board static final ints W/B_BAR_LOC, 
+       W/B_BEAR_OFF and W/B_PAST_BEAR_OFF */
+    private  int start = Board.ILLEGAL_MOVE ;
+    private  int end  = Board.ILLEGAL_MOVE; 
+    private  int color = Board.neutral;
+    private  Game myGame = null; /* is this necessary? */
     
-    public static final int bar = 0;
-    public static final int bear = -1; /* just a symbol: is it bad to mismatch board?? */
+   // public static final int bar = 0;
+   // public static final int bear = -1; /* just a symbol: is it bad to mismatch board?? */
     
     /**
      * Constructor for objects of class MoveOne
      * Note: start + roll might not equal end when bearing off
-     * but creator of PartialMove should use static function
-     * int Board.endPointMovingFrom(int start, int steps, int color, Board board)
+     * but creator of PartialMove should use 
+     * int Board.endPointMovingFrom(int start, int steps, int color)
      * to calculate end.
      * and no higher blots can use a too-high roll.
      */
     public PartialMove(int newStart, int newRoll, int newEnd, Game newGame, int newColor, int newWhichDie) 
       /*throws BadPartialMoveException, BadBoardException*/ {
         if (newGame == null) {
-            throw new NullPointerException/*BadBoardException*/("Moves must know the game they belong to, can't be null game");
+            /* throw new BadBoardException*/
+            throw new NullPointerException("Moves must know the game they belong to, can't be null game");
         }
         myGame = newGame;
         if (Board.legitStartLoc( newStart,newColor ) && Board.legitEndLoc( newEnd, newColor ) && 
@@ -45,7 +48,8 @@ public class PartialMove implements Comparable<PartialMove>
           color = newColor;
           whichDie = newWhichDie;
         } else {
-            String msg = "[bad PartialMove start:" + newStart + " roll:" + newRoll + " end:" + newEnd + " color:" + newColor + " whichDie:" + newWhichDie + "]";
+            String msg = "[bad PartialMove start:" + newStart + " roll:" + newRoll 
+            + " end:" + newEnd + " color:" + newColor + " whichDie:" + newWhichDie + "]";
             throw new IllegalArgumentException/*BadPartialMoveException*/(msg);
         }
     } // constructor with values
@@ -84,8 +88,7 @@ public class PartialMove implements Comparable<PartialMove>
     /**
      * has to check values inside PartialMoves
      */
-    public boolean equals(Object other) throws ClassCastException
-    {
+    public boolean equals(Object other) throws ClassCastException  {
         // boolean identical = false;
         // do they have same values?
         if (!(other instanceof PartialMove)) {
@@ -140,5 +143,5 @@ public class PartialMove implements Comparable<PartialMove>
              throw new ClassCastException(myMsg);
         }
     } // CompareTo
-    
-} // class MoveOne
+     // class PartialMove
+}

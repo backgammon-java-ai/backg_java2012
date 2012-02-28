@@ -129,5 +129,5 @@ public class AI {
         System.out.println( "My AI is dumb and is just choosing first possible move. Will move to " + bestMove );
         return bestMove;
     } /* bestMoveOf */
-    
-} /* class AI */
+    /* class AI */ 
+}

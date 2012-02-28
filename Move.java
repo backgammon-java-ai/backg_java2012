@@ -10,6 +10,7 @@ import java.util.*;  // provides Collection ?
  * 
  * If this is going to be in a set, it has to implement equals & hashcode
  * If this is going to be sorted (but how to compare moves to each other?)
+ * (by seeing if their resulting boards are same arrangement of blots?)
  * it would have to "implements Comparable<Move>" and have a
  * public int compareTo(Move other) {
  * which returns negative integer, 0, or a positive integer depending on whether the 
@@ -18,13 +19,12 @@ import java.util.*;  // provides Collection ?
  * @author Julien S., Josh G., Mike Roam
  * @version (2011 Nov 15)
  */
-public class Move /* implements Comparable<Move> */
-{
+public class Move /* implements Comparable<Move> */ {
     
-    
-    private final int myColor;
-    private final Game myGame; 
-    private final ArrayList<PartialMove> myPartialMoves;
+    private int myColor = Board.neutral;
+//    private final Game myGame==null; 
+    private /*final*/ ArrayList<PartialMove> myPartialMoves = null;
+    private Board myBoard = null; /*For comparing the quality score of moves*/
     /* private int howManyMoves = 0; redundant for moves.size()==0 and moves.isEmpty( )? silly? */
     private boolean orderMatters = false; /* we'd better decide this in the constructor?? */
     //private int howManyBlotsAreMoving = 1; // might be 4 pieces moving with doubles!
@@ -33,12 +33,12 @@ public class Move /* implements Comparable<Move> */
     
     
     /**
-     * Constructor for objects of class Move, receiving 2 moves.
+     * Constructor for objects of class Move, receiving 2?? moves.
      * 0,1,2,3,4 are all possible since we might have rolled doubles and might be blocked.
      */
-    public Move(ArrayList<PartialMove> theNewPartials, int myNewColor, Game myNewGame)
-    throws BadBoardException, BadMoveException
-    {
+    public Move(ArrayList<PartialMove> theNewPartials, int myNewColor, /*Game myNewGame*/ Board myNewStarterBoard /*Final?*/)
+/*Can't be starter board because some of the partials may have happened to it already!*/
+    throws BadBoardException, BadMoveException    {
         if (theNewPartials == null) {
             myPartialMoves = new ArrayList<PartialMove>( ); // empty
         } else {
@@ -49,14 +49,13 @@ public class Move /* implements Comparable<Move> */
         } else {
             throw new BadMoveException("bogus color '" + myNewColor + "'");
         }
-        if (myNewGame == null) {
-            throw new BadBoardException("Moves must know the game they belong to, can't be null game");
+        if (myNewStarterBoard/*Game*/ == null) {
+            throw new BadBoardException("Moves must know the board/*game*/ they belong to, can't be null");
         }
-        myGame = myNewGame;
+        myBoard/*Game*/ = myNewStarterBoard/*Game*/;
         
         int listSize =  myPartialMoves.size( );
         if (listSize > maxPartialMovesInAMove) {
-            System.out.println("Weird: I'm building a move that has " + listSize + " partial moves, more than max allowed (" + maxPartialMovesInAMove  +")!");
             throw new BadMoveException("Weird: I'm building a move that has " + listSize + " partial moves, more than max allowed (" + maxPartialMovesInAMove +")!");
         }
         orderMatters = checkWhetherOrderMatters( );
@@ -72,8 +71,7 @@ public class Move /* implements Comparable<Move> */
     /**
      * has to check values inside PartialMoves
      */
-    public boolean equals(Object other)
-    {
+    public boolean equals(Object other)    {
         if (!(other instanceof Move)) { /* takes care of null! */
             return false; /* null list is different than empty existing list!? */
         }
@@ -155,7 +153,7 @@ public class Move /* implements Comparable<Move> */
                 return true;
             }
             /* next check if a blot is planning to move from a place it hasn't reached yet */
-            if (myGame.myBoard.getColorOnPoint( aPartialMove.getStart( ) ) != aPartialMove.getColor( ) ) {
+            if (/*myGame.*/myBoard.getColorOnPoint( aPartialMove.getStart( ) ) != aPartialMove.getColor( ) ) {
                 return thisPathOnlyWorksInOneOrder( ); 
             }
         } /* for */
@@ -200,5 +198,5 @@ public class Move /* implements Comparable<Move> */
         System.out.println("Move's hashCode isn't really calculating. FIX!!");
         return hash; /* how about product or sum of all hashcodes? */
     }
-    
-} // class Move
+     // class Move
+}
