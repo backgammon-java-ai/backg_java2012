@@ -4,7 +4,7 @@ note: "http://jbackgammon.sf.net" no longer exists but jumps to
 "http://jbackgammon.sourceforge.net/" which is just a placeholder: no code, no working links, no info.
 ??possible alternate "http://djbackgammon.sourceforge.net/" has no source code, might not be java, 
 and gives credit to different developer "David le Roux"
- 
+
 Copyright (C) 2002
 George Vulov <georgevulov@hotmail.com>
 Cody Planteen <frostgiant@msn.com>
@@ -14,16 +14,16 @@ This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2 of the License, or
 (at your option) any later version.
- 
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
- 
+
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-****************************************************************/
+ ****************************************************************/
 
 /**
  * File: Game.java (was JBackgammon.java)
@@ -33,7 +33,6 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  * A "Game" has a board, and the board has dice. 
  */
 
- 
 
 import javax.swing.*;
 import java.awt.*;
@@ -43,18 +42,16 @@ import java.awt.image.*;
 import java.util.Random;
 import java.util.*;  // provides Collections
 
-
 public class Game extends JFrame implements ActionListener, CommunicationAdapter {
     static final String VERSION = "1.4";
     public static final long serialVersionUID = 1L; // mjr, version 1
-    
+
     // point colors (player colors are only white & black)
     /* Beware: Board has a duplicate list of these colors which had better stay identical! */
     static final int neutral = 0;
     static final int white = 1;
     static final int black = 2;
     static final int game_unstarted = 3;
-
 
     static final int LEFT_MARGIN = 20;
     static final int TOP_MARGIN = 60;
@@ -71,17 +68,15 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
     // This contains some booleans about the status of the game
     Status status = null;
 
-    
     Communication comm = null;    // performs the network operations
     JTextField msg_input = null;    // for displaying messages (during network game?)
     JTextArea msg_display = null;    // display messages between the players
     JScrollPane msg_scrollpane = null;    // for scrolling messages
 
-
     // The buttons the gui uses for various purposes.
     // Bummer: the buttons that show legal available moves on the board
     // are part of this, rather than being part of the Board.
-    FixedButton FButton[] = new FixedButton[9]; /* array of buttons 0..8 */
+    FixedButton fButton[] = new FixedButton[9]; /* array of buttons 0..8 */
 
     static final int btn_CancelMove = 0;
     static final int btn_RollDice = 1;
@@ -110,7 +105,6 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
     static final int MESSAGE_HEIGHT = 80; /* only when networked */
 
 
-
     /**
      * Game class constructor
      * assumes you're playing against AI.
@@ -119,7 +113,6 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
     public Game() {
         this(false /* networkedTF */);  // merely call fancier constructor
     }
-
 
     /**
      * Game class constructor
@@ -138,18 +131,18 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         // Call pack() since otherwise getItsets() does not work until the frame is shown
         pack();
 
-        for (int i=0; i < FButton.length; i++) {
+        for (int i=0; i < fButton.length; i++) {
             /* create all the buttons */
-            FButton[i] = new FixedButton(getContentPane(), this);
+            fButton[i] = new FixedButton(getContentPane(), this);
         }
 
         if (status.networked) {
             setupNetworking( );
             setSize(myBoardPict.BOARD_WIDTH + GUI_WIDTH/*632*/
-               , myBoardPict.BOARD_HEIGHT + BOARD_PADDING + MESSAGE_HEIGHT /*560*/);
+            , myBoardPict.BOARD_HEIGHT + BOARD_PADDING + MESSAGE_HEIGHT /*560*/);
         } else {
             setSize(myBoardPict.BOARD_WIDTH + GUI_WIDTH/*632*/
-               , myBoardPict.BOARD_HEIGHT + BOARD_PADDING);
+            , myBoardPict.BOARD_HEIGHT + BOARD_PADDING);
         }
 
         // Set up double buffering
@@ -160,27 +153,25 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         setVisible(true); // was the deprecated "show()";
     } // Game( ) constructor
 
+    /**
+     * Called by Game(boolean) constructor if we're networking
+     */
+    private void setupNetworking( ) {
+        comm = new Communication((CommunicationAdapter)this);
+        comm.listen();
+        // Set up the window for messaging
+        getRootPane().setDefaultButton(fButton[btn_SendMessage]);
+        msg_input = new JTextField();
+        getContentPane().add(msg_input);
+        msg_display = new JTextArea();
+        msg_scrollpane = new JScrollPane(msg_display);
+        msg_scrollpane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        getContentPane().add(msg_scrollpane);
+    } /* setupNetworking( ) */
 
     /**
-      * Called by Game(boolean) constructor if we're networking
-      */
-      private void setupNetworking( ) {
-            comm = new Communication((CommunicationAdapter)this);
-            comm.listen();
-            // Set up the window for messaging
-            getRootPane().setDefaultButton(FButton[btn_SendMessage]);
-            msg_input = new JTextField();
-            getContentPane().add(msg_input);
-            msg_display = new JTextArea();
-            msg_scrollpane = new JScrollPane(msg_display);
-            msg_scrollpane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-            getContentPane().add(msg_scrollpane);
-        } /* setupNetworking( ) */
-
-
-     /**
-      * Is called by Board, so can't be private.
-      */
+     * Is called by Board, so can't be private.
+     */
     public void debug_msg(String dmsg) {
         /*System.out.println("----------------");
         System.out.println("Breakpoint " +  dmsg);
@@ -196,9 +187,7 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
     } // debug_msg
 
 
-
-
-   /** 
+    /** 
      * calls "Board.doPartialMove( )" method
      * There is a "getUsedDie( )" (in myBoard().myDice) which says which which dice have been used.
      * (getMyBoard().myDice.isDoubles( ) is true when doubles have been rolled, 
@@ -229,7 +218,7 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
             // If a move has been made previously, this is 2d move, end the player's turn
             //if ((myBoard.myDice.getUsedDie(1 )) || (myBoard.getUsedDie( 2)) {
             //if ( howManyPartialsDone > 1?0? might only be able to make one move... 
-                endTurn();
+            endTurn();
             //} else {
             //    /*myGame.*/switchedplayers = false;
             //    myBoard.setUsedDie( whichDie );
@@ -237,16 +226,16 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         } else if (getMyBoard().myDice.isDoubles( )) {
             //myBoard.myDice.doubletCountdown(  );
             //if (myBoard.getDoubletMovesCountdown( )==0) {
-                endTurn();
+            endTurn();
             //} else {
             //    /*myGame.*/switchedplayers = false;
-           // }
+            // }
         }
 
         // Turn off focus on this point
         //endPartialMove();
         //repaint();
-        
+
         // If this wasn't the player's last move,
         // check if he is still on the bar or if he can make more moves
         //if ( ! switchedplayers ) {
@@ -260,12 +249,10 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
     } // doMove( )
 
 
-
-
     /**
-    * Forfeit the current player's turn.
-    * Is called by Board, so can't be private.
-    */
+     * Forfeit the current player's turn.
+     * Is called by Board, so can't be private.
+     */
     public void forfeitTurn() {
         String msg = "You are stuck, you forfeit your turn.";
         JOptionPane.showMessageDialog(this, msg);
@@ -273,12 +260,11 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         repaint();
     } // forfeitTurn( )
 
-
     /**
-    * Checks if there is a winner
-    * If there is one, displays appropriate message.
-    * Return true if there was a winner, false otherwise
-    */
+     * Checks if there is a winner
+     * If there is one, displays appropriate message.
+     * Return true if there was a winner, false otherwise
+     */
     public boolean checkWin(int color)
     {
         String msg;
@@ -316,7 +302,6 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
     } // checkWin( )
 
 
-
     /** 
      * Roll the dice for the current player.
      * If current player is on the bar then this calls "myBoard.handleBar( )"
@@ -324,28 +309,28 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
      */
     public void doRoll() {
         myBoard.myDice.roll(); /* sets a doublet countdown (4 or 2), has method isDoubles( ) which knows the truth */
-        
+
         if (status.networked) {
             comm.sendroll(myBoard.myDice.getDie(1), myBoard.myDice.getDie(2));
         }
 
         // Turn off roll dice button
-        FButton[btn_RollDice].setEnabled(false); // roll dice
+        fButton[btn_RollDice].setEnabled(false); // roll dice
 
         repaint();
 
         if (currentPlayer == game_unstarted) {
             /* Dice 1 is white, Dice 2 is black; high player starts using these 2. 
-               In case of tie, roll again until no tie. So a first move can never be doubles!*/
-               /* maybe this should wait for the players to roll again? */
-               while (myBoard.myDice.isDoubles( ) ) {
-                    myBoard.myDice.roll( );
-                }
-                if (myBoard.myDice.getDie(1) > myBoard.myDice.getDie(2)) {
-                    currentPlayer = white;
-                } else {
-                    currentPlayer = black;
-                }
+            In case of tie, roll again until no tie. So a first move can never be doubles!*/
+            /* maybe this should wait for the players to roll again? */
+            while (myBoard.myDice.isDoubles( ) ) {
+                myBoard.myDice.roll( );
+            }
+            if (myBoard.myDice.getDie(1) > myBoard.myDice.getDie(2)) {
+                currentPlayer = white;
+            } else {
+                currentPlayer = black;
+            }
         }
         // Check if the player is on the bar and deal with that right away before player tries to move.
         if (myBoard.onBar(currentPlayer)) {
@@ -354,7 +339,6 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
             forfeitTurn();
         }
     } // doRoll( )
-
 
     /**
      * This could handle more than 2 players with slight modification...
@@ -368,7 +352,6 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
     } /* changePlayer */
 
 
-
     /**
      * End the current player's turn and start the turn
      * of the other player.
@@ -380,8 +363,8 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
 
         // Reset vars, turn off new game button (why??)
         myBoard.myDice.reset();  /* calls resetUsedDice(  ),  sets rolled to false and countdown to 0 */
-        FButton[btn_NewGame].setEnabled(false);
-        
+        fButton[btn_NewGame].setEnabled(false);
+
         repaint();
 
         if (!status.networked) {
@@ -403,20 +386,18 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         repaint();
     } // endTurn
 
-
     /**
      *  Begins a player's turn
      */
     private void startTurn() {
         // Enable roll dice and new game buttons
-        FButton[btn_RollDice].setEnabled(true);
-        FButton[btn_NewGame].setEnabled(true);
+        fButton[btn_RollDice].setEnabled(true);
+        fButton[btn_NewGame].setEnabled(true);
         if (status.networked && !status.observer) {
             Toolkit.getDefaultToolkit().beep();
             JOptionPane.showMessageDialog(this, "It is now your turn");
         }
     } // startTurn( )
-
 
     /** 
      * This is for Partial Move
@@ -428,26 +409,23 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
     public void endPartialMove() {
         status.point_selected = false;
         // Disable potential move buttons, which ought to be part of board someday
-        /*myGame.*/FButton[btn_AtPotentialMove1].setVisible(false); // potential move 1
-        /*myGame.*/FButton[btn_AtPotentialMove2].setVisible(false); // potential move 2
+        /*myGame.*/fButton[btn_AtPotentialMove1].setVisible(false); // potential move 1
+        /*myGame.*/fButton[btn_AtPotentialMove2].setVisible(false); // potential move 2
         // Disable "Cancel Move" button
-        /*myGame.*/FButton[btn_CancelMove].setEnabled(false); // cancel move
+        /*myGame.*/fButton[btn_CancelMove].setEnabled(false); // cancel move
     } // endPartialMove( )
 
-    
     public Board getMyBoard( ) {
         return myBoard;
     }
-    
-    
+
     /** 
      * returns int white = 1; black = 2; (shouldn't ever have neutral = 0;)
      */
     public int /*PlayerColor*/ getCurrentPlayer( ) {
         return currentPlayer;
     }
-    
-    
+
     /**
      * note: beware overlapping duties hardcoded into startTurn( ), endTurn( ), ??
      * Should this acknowledge a change somehow? Shouldn't roll dice, I guess.
@@ -460,8 +438,6 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
     } 
 
 
-
-
     /**
      *  Initialize the GUI
      *   Sets up all the buttons
@@ -470,65 +446,65 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         int left = GUI_Dim.BTN_LEFT_EDGE; /* 475 when board is 430 wide */
         int width = GUI_Dim.BTN_WIDTH; /* 135 */
         int height = GUI_Dim.BTN_HEIGHT; /* 25 */
-        FButton[btn_CancelMove].setBounds(left, 355, width, height);
-        FButton[btn_CancelMove].setVisible(true);
-        FButton[btn_CancelMove].setText(CANCEL);
-        FButton[btn_CancelMove].addActionListener(this);
-        FButton[btn_CancelMove].setEnabled(false);
+        fButton[btn_CancelMove].setBounds(left, 355, width, height);
+        fButton[btn_CancelMove].setVisible(true);
+        fButton[btn_CancelMove].setText(CANCEL);
+        fButton[btn_CancelMove].addActionListener(this);
+        fButton[btn_CancelMove].setEnabled(false);
 
-        FButton[btn_RollDice].setBounds(left, 320, width, height);
-        FButton[btn_RollDice].setVisible(true);
-        FButton[btn_RollDice].setText(ROLL_DICE);
-        FButton[btn_RollDice].addActionListener(this);
-        FButton[btn_RollDice].setEnabled(true);
+        fButton[btn_RollDice].setBounds(left, 320, width, height);
+        fButton[btn_RollDice].setVisible(true);
+        fButton[btn_RollDice].setText(ROLL_DICE);
+        fButton[btn_RollDice].addActionListener(this);
+        fButton[btn_RollDice].setEnabled(true);
 
-        FButton[btn_BearOff].setBounds(left, 285, width, height);
-        FButton[btn_BearOff].setVisible(true);
-        FButton[btn_BearOff].setText(BEAR_OFF);
-        FButton[btn_BearOff].addActionListener(this);
-        FButton[btn_BearOff].setEnabled(false);
+        fButton[btn_BearOff].setBounds(left, 285, width, height);
+        fButton[btn_BearOff].setVisible(true);
+        fButton[btn_BearOff].setText(BEAR_OFF);
+        fButton[btn_BearOff].addActionListener(this);
+        fButton[btn_BearOff].setEnabled(false);
 
- // potential move 1. Are these coords so it is hiding off the right side?
-        FButton[btn_AtPotentialMove1].setBounds(650, 490, 9, 10);
-        FButton[btn_AtPotentialMove1].setVisible(true);
-        FButton[btn_AtPotentialMove1].setText(MOVE1);
-        FButton[btn_AtPotentialMove1].addActionListener(this);
-        FButton[btn_AtPotentialMove1].setEnabled(true);
+        // potential move 1. Are these coords so it is hiding off the right side?
+        fButton[btn_AtPotentialMove1].setBounds(650, 490, 9, 10);
+        fButton[btn_AtPotentialMove1].setVisible(true);
+        fButton[btn_AtPotentialMove1].setText(MOVE1);
+        fButton[btn_AtPotentialMove1].addActionListener(this);
+        fButton[btn_AtPotentialMove1].setEnabled(true);
 
- // potential move 2. Are these coords so it is hiding off the right side?
-        FButton[btn_AtPotentialMove2].setBounds(750, 490, 9, 10); 
-        FButton[btn_AtPotentialMove2].setVisible(true);
-        FButton[btn_AtPotentialMove2].setText(MOVE2);
-        FButton[btn_AtPotentialMove2].addActionListener(this);
-        FButton[btn_AtPotentialMove2].setEnabled(true);
+        // potential move 2. Are these coords so it is hiding off the right side?
+        fButton[btn_AtPotentialMove2].setBounds(750, 490, 9, 10); 
+        fButton[btn_AtPotentialMove2].setVisible(true);
+        fButton[btn_AtPotentialMove2].setText(MOVE2);
+        fButton[btn_AtPotentialMove2].addActionListener(this);
+        fButton[btn_AtPotentialMove2].setEnabled(true);
 
-        FButton[btn_NewGame].setBounds(left, 250, width, height);
-        FButton[btn_NewGame].setVisible(true);
-        FButton[btn_NewGame].setText(NEW_GAME);
-        FButton[btn_NewGame].addActionListener(this);
-        FButton[btn_NewGame].setEnabled(true);
-        
-        FButton[btn_ComputerMove].setBounds(left, 380, width, height);
-        FButton[btn_ComputerMove].setVisible(true);
-        FButton[btn_ComputerMove].setText(COMPUTER_MOVE);
-        FButton[btn_ComputerMove].addActionListener(this);
-        FButton[btn_ComputerMove].setEnabled(true);
+        fButton[btn_NewGame].setBounds(left, 250, width, height);
+        fButton[btn_NewGame].setVisible(true);
+        fButton[btn_NewGame].setText(NEW_GAME);
+        fButton[btn_NewGame].addActionListener(this);
+        fButton[btn_NewGame].setEnabled(true);
+
+        fButton[btn_ComputerMove].setBounds(left, 380, width, height);
+        fButton[btn_ComputerMove].setVisible(true);
+        fButton[btn_ComputerMove].setText(COMPUTER_MOVE);
+        fButton[btn_ComputerMove].addActionListener(this);
+        fButton[btn_ComputerMove].setEnabled(true);
 
         if (status.networked) {
-            FButton[btn_Connect].setBounds(left, 225, width, height);
-            FButton[btn_Connect].setVisible(true);
-            FButton[btn_Connect].setText(CONNECT);
-            FButton[btn_Connect].addActionListener(this);
-            FButton[btn_Connect].setEnabled(true);
+            fButton[btn_Connect].setBounds(left, 225, width, height);
+            fButton[btn_Connect].setVisible(true);
+            fButton[btn_Connect].setText(CONNECT);
+            fButton[btn_Connect].addActionListener(this);
+            fButton[btn_Connect].setEnabled(true);
 
-            FButton[btn_SendMessage].setBounds(left, TOP_MARGIN + getInsets().top + 412, width, height);
-            FButton[btn_SendMessage].setVisible(true);
-            FButton[btn_SendMessage].setText(SEND_MSG);
-            FButton[btn_SendMessage].addActionListener(this);
-            FButton[btn_SendMessage].setEnabled(false);
+            fButton[btn_SendMessage].setBounds(left, TOP_MARGIN + getInsets().top + 412, width, height);
+            fButton[btn_SendMessage].setVisible(true);
+            fButton[btn_SendMessage].setText(SEND_MSG);
+            fButton[btn_SendMessage].addActionListener(this);
+            fButton[btn_SendMessage].setEnabled(false);
 
-            FButton[btn_RollDice].setEnabled(false);
-            FButton[btn_NewGame].setEnabled(false);
+            fButton[btn_RollDice].setEnabled(false);
+            fButton[btn_NewGame].setEnabled(false);
 
             msg_input.setBounds(LEFT_MARGIN - getInsets().left, TOP_MARGIN + getInsets().top + 412, 450, height);
 
@@ -539,29 +515,27 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         }
     } // setupGUI
 
-
     /**
      *  Connect to another Game for network play
      */
     public void connect() {
         String input_ip;
         input_ip = JOptionPane.showInputDialog("Enter computer name or IP address");
-        FButton[btn_Connect].setEnabled(false); // connect
+        fButton[btn_Connect].setEnabled(false); // connect
         if (input_ip != null) {
             if ( (comm.portBound == 1 ) 
-                && ( (input_ip.equalsIgnoreCase("localhost")) || (input_ip.equals("127.0.0.1")) ) )
+            && ( (input_ip.equalsIgnoreCase("localhost")) || (input_ip.equals("127.0.0.1")) ) )
             {
                 JOptionPane.showMessageDialog(this, "Game cannot connect to the same instance of itself");
-                FButton[btn_Connect].setEnabled(true);
+                fButton[btn_Connect].setEnabled(true);
             } else {
                 status.clicker = true;
                 comm.connect(input_ip);
             }
         } else { // The user canceled, re-enable the connect button
-            FButton[btn_Connect].setEnabled(true);
+            fButton[btn_Connect].setEnabled(true);
         }
     } // connect( )
-
 
     /**
      *  Method to send a message through a JOptionPane to the other user
@@ -577,7 +551,6 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         msg_input.setText("");
     } // sendMessage( )
 
-
     /*=================================================
      * Network Methods 
      * ================================================*/
@@ -586,10 +559,9 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
      * The network player has won
      */
     public void receiveLose() {
-        FButton[btn_NewGame].setEnabled(true);
+        fButton[btn_NewGame].setEnabled(true);
         JOptionPane.showMessageDialog(this, "You lose!");
     } // receiveLose( )
-
 
     /**
      *  Connection lost, reset the board for a new game
@@ -597,7 +569,7 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
     public void disconnected() {
         JOptionPane.showMessageDialog(this, "Network connection lost!");
         // Allow the person to connect to someone else
-        FButton[btn_Connect].setEnabled(true);
+        fButton[btn_Connect].setEnabled(true);
         // Reset the order of connecting
         status.clicker = false;
         // Start listening for connections again
@@ -605,19 +577,17 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         resetGame();
     } // disconnected( )
 
-
     /**
      * Implementing the "connectionRefused( )" method of interface CommunicationAdapter
      * Which says what to do if we could not connect to an ip
      */
     public void connectionRefused() {
         JOptionPane.showMessageDialog(this, "Connection refused.\n\nMake sure the " 
-        +   "computer name/IP is correct\n" 
-           + "and that the destination is running Game in networked mode.");
+            +   "computer name/IP is correct\n" 
+            + "and that the destination is running Game in networked mode.");
         status.clicker = false;
-        FButton[btn_Connect].setEnabled(true);
+        fButton[btn_Connect].setEnabled(true);
     } // connectionRefused( )
-
 
     /**
      *  The network player has rolled the dice, display them
@@ -630,33 +600,30 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         repaint();
     } // receiverolls( )
 
-
     /**
      *  The non-network player got sent to the bar, update the board
      * Apparently point is a number from the point of view of the opponent,
      * So we're doing the 25 - point thing..
      */
     public void receiveBar(int point) {
-          /* int destPointNum, int howMany, int color/* not merely playerColor*/
+        /* int destPointNum, int howMany, int color/* not merely playerColor*/
         myBoard.setPoint((Board.howManyPoints+1) - point, /*howMany:*/0, /*color:*/neutral);
         myBoard.white_bar++;
         repaint();
     } // receivebar
-
 
     /**
      * The network player requested a new game, get a response
      */ 
     public void receiveResetReq() {
         int reset = JOptionPane.showConfirmDialog(this, 
-            "The network player has requested a new game.\nDo you want to accept?",
-            "New Game Request",JOptionPane.YES_NO_OPTION);
+                "The network player has requested a new game.\nDo you want to accept?",
+                "New Game Request",JOptionPane.YES_NO_OPTION);
         comm.sendResetResp(reset);
         if ( reset == JOptionPane.YES_OPTION ) {
             resetGame();
         }
     } // receiveResetReq
-
 
     /**
      * The network player responded to a new game request, process the results
@@ -679,13 +646,12 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         }
     } // receiveResetResp( )
 
-
     /**
-    * The network player has moved, update the board.
-    * Apparently remote network player is always black?? (which explains why her moves are getting (25 - X)).
-    * Apparently oldpos value -1 used to mean coming in from bar, and 26 meant bearing off?
-    * Are the constants being handed in properly for BAR_ and BEAR?  Probably not.
-    */
+     * The network player has moved, update the board.
+     * Apparently remote network player is always black?? (which explains why her moves are getting (25 - X)).
+     * Apparently oldpos value -1 used to mean coming in from bar, and 26 meant bearing off?
+     * Are the constants being handed in properly for BAR_ and BEAR?  Probably not.
+     */
     public void receiveMove(int playerColor, int oldpos, int newpos) {
         /* throw New IllegalArgumentException("This network moving needs complete overhaul"); */
         if ( ! Board.legitStartLoc( oldpos, playerColor )) { // also checks the playerColor
@@ -697,47 +663,46 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         if ( this != null ) {
             throw new IllegalArgumentException("receiveMove doesn't know whether to call movePoint( ) or ??");
         } else {
-        // shouldn't this just call moveBlot or doPartialMove or something like that
-        // rather than re-inventing all this bar/bear/point movement??
-        if (playerColor == white) {
-            if ( (1 <= oldpos) && (oldpos<= Board.howManyPoints) && (1<=newpos) && (newpos<=Board.howManyPoints) ) {
-                myBoard.moveBlot(playerColor /* white*/, oldpos, newpos);
-                repaint();
-            } else if (newpos==Board.WHITE_BEAR_OFF_LOC ) /* || WHITE_PAST_BEAR_OFF_LOC?? */ {
+            // shouldn't this just call moveBlot or doPartialMove or something like that
+            // rather than re-inventing all this bar/bear/point movement??
+            if (playerColor == white) {
+                if ( (1 <= oldpos) && (oldpos<= Board.howManyPoints) && (1<=newpos) && (newpos<=Board.howManyPoints) ) {
+                    myBoard.moveBlot(playerColor /* white*/, oldpos, newpos);
+                    repaint();
+                } else if (newpos==Board.WHITE_BEAR_OFF_LOC ) /* || WHITE_PAST_BEAR_OFF_LOC?? */ {
                     /* shouldn't this call board.bearOff( ) to make sure everything is handled? */
-                myBoard.white_bear++;
-                myBoard.takeOneBlotOffPoint( oldpos );
-                /* instead of */
-                //myBoard.setPoint(/*point*/oldpos, /*howMany:*/myBoard.getHowManyBlotsOnPoint(oldpos) - 1, playerColor/*white*/);
-                repaint();
-            } else if (oldpos== Board.WHITE_BAR_LOC ) {
-                myBoard.white_bar--;
-                myBoard.setPoint(/*point*/newpos, /*howMany:*/myBoard.getHowManyBlotsOnPoint(newpos) + 1, playerColor/*white*/);
-                repaint();
-            }
-        } else {
-            int oldPosForBlack = (Board.howManyPoints + 1) - oldpos;
-            int newPosForBlack = (Board.howManyPoints + 1) - newpos;
-            if ( (1<=oldPosForBlack) && (oldPosForBlack<=Board.howManyPoints) 
+                    myBoard.white_bear++;
+                    myBoard.takeOneBlotOffPoint( oldpos );
+                    /* instead of */
+                    //myBoard.setPoint(/*point*/oldpos, /*howMany:*/myBoard.getHowManyBlotsOnPoint(oldpos) - 1, playerColor/*white*/);
+                    repaint();
+                } else if (oldpos== Board.WHITE_BAR_LOC ) {
+                    myBoard.white_bar--;
+                    myBoard.setPoint(/*point*/newpos, /*howMany:*/myBoard.getHowManyBlotsOnPoint(newpos) + 1, playerColor/*white*/);
+                    repaint();
+                }
+            } else {
+                int oldPosForBlack = (Board.howManyPoints + 1) - oldpos;
+                int newPosForBlack = (Board.howManyPoints + 1) - newpos;
+                if ( (1<=oldPosForBlack) && (oldPosForBlack<=Board.howManyPoints) 
                 && (1<=newPosForBlack) && (newPosForBlack<=Board.howManyPoints) ) {
-                myBoard.moveBlot(playerColor /* black*/, oldPosForBlack, newPosForBlack);
-                repaint();
-            } else if (newpos == Board.BLACK_BEAR_OFF_LOC /* was 26*/) /* || BLACK_PAST_BEAR_OFF_LOC?? */{
-                myBoard.black_bear++;
-                myBoard.takeOneBlotOffPoint( newPosForBlack ); /* instead of */
-                //myBoard.setPoint(/*pointNum:*/newPosForBlack
-                //    , /*howMany:*/myBoard.getHowManyBlotsOnPoint(newPosForBlack) - 1, black);
-                repaint();
-            } else if (oldpos == Board.BLACK_BAR_LOC /*was -1*/) {
-                myBoard.black_bar--;
-                myBoard.setPoint(/*pointNum:*/newPosForBlack
+                    myBoard.moveBlot(playerColor /* black*/, oldPosForBlack, newPosForBlack);
+                    repaint();
+                } else if (newpos == Board.BLACK_BEAR_OFF_LOC /* was 26*/) /* || BLACK_PAST_BEAR_OFF_LOC?? */{
+                    myBoard.black_bear++;
+                    myBoard.takeOneBlotOffPoint( newPosForBlack ); /* instead of */
+                    //myBoard.setPoint(/*pointNum:*/newPosForBlack
+                    //    , /*howMany:*/myBoard.getHowManyBlotsOnPoint(newPosForBlack) - 1, black);
+                    repaint();
+                } else if (oldpos == Board.BLACK_BAR_LOC /*was -1*/) {
+                    myBoard.black_bar--;
+                    myBoard.setPoint(/*pointNum:*/newPosForBlack
                     , /*howMany:*/myBoard.getHowManyBlotsOnPoint(newPosForBlack) + 1, black);
-                repaint();
+                    repaint();
+                }
             }
-        }
-    } /* end of sudden death */
+        } /* end of sudden death */
     } // receiveMove( )
-
 
     /**
      * The network player has sent an instant message. Display it
@@ -748,14 +713,13 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         msg_display.scrollRectToVisible(new Rectangle(0, msg_display.getHeight(), 1, 1));
     } // receiveMessage( )
 
-
     /** 
      * Connection with an instance of Game successfully established
      * Start the game
      */
     public void connected() {
-        FButton[btn_Connect].setEnabled(false);
-        FButton[btn_SendMessage].setEnabled(true);
+        fButton[btn_Connect].setEnabled(false);
+        fButton[btn_SendMessage].setEnabled(true);
 
         // The client initiating the connection
         // decides who goes first
@@ -775,7 +739,6 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         repaint();
     } // connected( )
 
-
     /** The network player has finished his turn.
      * Start the local player's turn
      * "local" is always white??
@@ -788,12 +751,10 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         startTurn();
     } // turnFinished( )
 
-
     /*=================================================
      * Overridden Methods 
      * (constructor wants boolean re networked? true/false)
      * ================================================*/
-
 
 
     public void actionPerformed(ActionEvent e) {
@@ -801,10 +762,10 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
             doRoll();
         } else if (e.getActionCommand().equals(CANCEL)) {
             status.point_selected = false;
-            FButton[btn_CancelMove].setEnabled(false);
-            FButton[btn_BearOff].setEnabled(false);
-            FButton[btn_AtPotentialMove1].setVisible(false);
-            FButton[btn_AtPotentialMove2].setVisible(false);
+            fButton[btn_CancelMove].setEnabled(false);
+            fButton[btn_BearOff].setEnabled(false);
+            fButton[btn_AtPotentialMove1].setVisible(false);
+            fButton[btn_AtPotentialMove2].setVisible(false);
             repaint();
         } else if (e.getActionCommand().equals(BEAR_OFF)) {
             myBoard.bearOff(currentPlayer);
@@ -838,7 +799,6 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         } // if newgame
     } // actionPerformed( )
 
-
     public void paint(Graphics g) {
         // Cast the Graphics to a Graphics2D so actual drawing methods
         // are available
@@ -859,26 +819,25 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         if ( (status.networked) && (! comm.isConnected() ) ) {
             putString("Waiting for connection...", /*X:*/15, /*Y:*/50, Color.RED, /*fontsize:*/15);
         }
-        
+
         // Blit the buffer onto the screen
         screen.drawImage(b_bimage, null, 0, 0);
 
-        FButton[btn_CancelMove].repaint();
-        FButton[btn_RollDice].repaint();
-        FButton[btn_BearOff].repaint();
-        FButton[btn_AtPotentialMove1].repaint();
-        FButton[btn_AtPotentialMove2].repaint();
-        FButton[btn_NewGame].repaint();
-        FButton[btn_ComputerMove].repaint();
+        fButton[btn_CancelMove].repaint();
+        fButton[btn_RollDice].repaint();
+        fButton[btn_BearOff].repaint();
+        fButton[btn_AtPotentialMove1].repaint();
+        fButton[btn_AtPotentialMove2].repaint();
+        fButton[btn_NewGame].repaint();
+        fButton[btn_ComputerMove].repaint();
 
         if (status.networked) {
-            FButton[btn_Connect].repaint();
-            FButton[btn_SendMessage].repaint();
+            fButton[btn_Connect].repaint();
+            fButton[btn_SendMessage].repaint();
             msg_input.repaint();
             msg_scrollpane.repaint();
         }
     } // paint( )
-
 
     public static void main(String args[]) {
         JFrame f = new JFrame("Main Menu");
@@ -900,7 +859,7 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         /* JLabel l3 = new JLabel("http:// jbackgammon.sf.net"); Dead link*/
         pane.add(l1);
         pane.add(l2);
-     /*   pane.add(l3); */
+        /*   pane.add(l3); */
 
         JButton ButtonA = new JButton("1P vs. 2P (same computer)");
         ButtonA.addActionListener(new MainMenuListener(f, /* networked */ false));
@@ -909,19 +868,18 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         pane.add(ButtonA);
         pane.add(ButtonB);
         f.getContentPane().add(pane);
-        
+
         f.pack();
         f.setVisible(true); // was the deprecated "f.show();"
     } // main( )
-
 
     /*=================================================
      * Drawing Methods 
      * ================================================*/
 
-     /** 
-      * Gets the X coordinate(??) of the specified point (aka "column" or "spike")
-      */
+    /** 
+     * Gets the X coordinate(??) of the specified point (aka "column" or "spike")
+     */
     public int findX(int point) {
         if (point <= 6) { /* quadrant one is 1..6 (for white, right?) */
             return LEFT_MARGIN + 401 - (32*(point - 1));
@@ -938,11 +896,10 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         return -1; // WTF??
     } // findX( )
 
-
     /** 
-      * Gets the Y coordinate (??) of the specified point (aka "column" or "spike")
-      */
-     public int findY(int point) {
+     * Gets the Y coordinate (??) of the specified point (aka "column" or "spike")
+     */
+    public int findY(int point) {
         if (point <= 12) { /* points 1..12 are in top half of board */
             return TOP_MARGIN;
         }
@@ -952,27 +909,26 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         return -1; // wtf??
     } // findY( )
 
-       /* shouldn't be final if board is resizable */
-        final static int left = GUI_Dim.BTN_LEFT_EDGE; /* 475 */
-        final static int furtherleft = GUI_Dim.LEFT_EDGE; /* 455 */
-        final static int bearTop = GUI_Dim.STATS_TOP_MARGIN; /* 30 */
-        final static int textLineHeight = GUI_Dim.TEXT_LINE_HEIGHT; /* 18 */
-        
+    /* shouldn't be final if board is resizable */
+    final static int left = GUI_Dim.BTN_LEFT_EDGE; /* 475 */
+    final static int furtherleft = GUI_Dim.LEFT_EDGE; /* 455 */
+    final static int bearTop = GUI_Dim.STATS_TOP_MARGIN; /* 30 */
+    final static int textLineHeight = GUI_Dim.TEXT_LINE_HEIGHT; /* 18 */
+
     /**
-      * Announce how many pieces each player beared off so far
-      */
+     * Announce how many pieces each player beared off so far
+     */
     public void drawBearStats() {
         String m1, m2;
         m1 = "White Pieces Beared Off: " + myBoard.white_bear;
         m2 = "Black Pieces Beared Off: " + myBoard.black_bear;
-        
+
         g_buffer.setColor(Color.BLACK);
         g_buffer.fill(new Rectangle2D.Double(left, bearTop, GUI_Dim.GUI_WIDTH, 2*textLineHeight));
 
         putString(m1, /*X:*/furtherleft, /*Y:*/bearTop + textLineHeight, Color.WHITE, /*fontsize:*/12);
         putString(m2, /*X:*/furtherleft, /*Y:*/bearTop + 2*textLineHeight, Color.WHITE, /*fontsize:*/12);
     } // drawBearStats( )
-
 
     public void drawPipStats() {
         String m1, m2;
@@ -981,12 +937,11 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
 
         g_buffer.setColor(Color.DARK_GRAY);
         g_buffer.fill(new Rectangle2D.Double(furtherleft, bearTop + 2*textLineHeight
-           , GUI_Dim.GUI_WIDTH, 2*textLineHeight));
+            , GUI_Dim.GUI_WIDTH, 2*textLineHeight));
 
         putString(m1, /*X:*/furtherleft, /*Y:*/bearTop + 3*textLineHeight, Color.WHITE, /*fontsize:*/12);
         putString(m2, /*X:*/furtherleft, /*Y:*/bearTop + 4*textLineHeight, Color.WHITE, /*fontsize:*/12);
     } // drawPipStats( )
-
 
     public void drawBoardScore() {
         String m1, m2;
@@ -995,12 +950,11 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
 
         g_buffer.setColor(Color.BLACK);
         g_buffer.fill(new Rectangle2D.Double(furtherleft, bearTop + 4*textLineHeight
-           , GUI_Dim.GUI_WIDTH, 2*textLineHeight));
+            , GUI_Dim.GUI_WIDTH, 2*textLineHeight));
 
         putString(m1, /*X:*/furtherleft, /*Y:*/bearTop + 5*textLineHeight, Color.WHITE, /*fontsize:*/12);
         putString(m2, /*X:*/furtherleft, /*Y:*/bearTop + 6*textLineHeight, Color.WHITE, /*fontsize:*/12);
     } // drawBoardScore( )
-
 
     /**
      * Puts their name on board ("white" "black" "game_unstarted")
@@ -1015,12 +969,11 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         }
         g_buffer.setColor(Color.DARK_GRAY);
         g_buffer.fill(new Rectangle2D.Double(furtherleft, bearTop + 6*textLineHeight
-           , GUI_Dim.GUI_WIDTH, 1*textLineHeight));
+            , GUI_Dim.GUI_WIDTH, 1*textLineHeight));
 
         putString(m1, /*X:*/furtherleft, /*Y:*/bearTop + 7*textLineHeight, Color.WHITE, /*fontsize:*/12);
         putString(m2, /*X:*/furtherleft, /*Y:*/bearTop + 8*textLineHeight, Color.WHITE, /*fontsize:*/12);
     }
-
 
     public String nameOf(int playerColor ) {
         switch (playerColor) {
@@ -1029,8 +982,9 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
             case game_unstarted: return "Game Unstarted";
             default: return "??";
         }
-    } /* currentPlayerName( ) */
+    } 
 
+    /* currentPlayerName( ) */
 
     private void putString(String message, int x, int y, Color c, int fontsize) {
         g_buffer.setFont(new Font("Arial", Font.BOLD, fontsize));
@@ -1038,11 +992,10 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         g_buffer.drawString(message, x, y);
     } // putString( )
 
-
-     /**
-      * Driver, organizes data and color before calling general purpose "drawDice"
-      * [ ]For formal game start we would want to draw one black die and one white die.
-      */
+    /**
+     * Driver, organizes data and color before calling general purpose "drawDice"
+     * [ ]For formal game start we would want to draw one black die and one white die.
+     */
     private void drawCurrentDice( ) {
         int dice1x = GUI_Dim.DICE1_LEFT;
         int dice2x = GUI_Dim.DICE2_LEFT;
@@ -1054,12 +1007,12 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         if (currentPlayer==black) {
             diceColor1 = diceColor2 = myBoardPict.clr_black;
             dotColor1 = dotColor2 = myBoardPict.clr_white;
-//        } else if (currentPlayer==white) {
-//            diceColor1 = diceColor2 = myBoardPict.clr_white;
-//            dotColor1 = dotColor2 = myBoardPict.clr_black;
+            //        } else if (currentPlayer==white) {
+            //            diceColor1 = diceColor2 = myBoardPict.clr_white;
+            //            dotColor1 = dotColor2 = myBoardPict.clr_black;
         } else if (currentPlayer==game_unstarted) {
-//            diceColor1 = myBoardPict.clr_white;
-//            dotColor1 = myBoardPict.clr_black;
+            //            diceColor1 = myBoardPict.clr_white;
+            //            dotColor1 = myBoardPict.clr_black;
             diceColor2 = myBoardPict.clr_black;
             dotColor2 = myBoardPict.clr_white;
         }
@@ -1067,12 +1020,11 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         drawDice(myBoard.myDice.getDie(2), dice2x, diceTop, diceColor2, dotColor2);
     } /* drawCurrentDice( ) */
 
-
     /**
      * Called by "drawCurrentDice( )"
      */
     private void drawDice(int roll, int x, int y, Color dicecolor, Color dotcolor) {
-         int diceSize = GUI_Dim.DICE_SIZE; /* 25 */
+        int diceSize = GUI_Dim.DICE_SIZE; /* 25 */
         int dotSize = GUI_Dim.DOT_SIZE; /* 4 */
         int leftX = GUI_Dim.DICE_MARGIN; /* 2 */
         int topY = leftX;   /* 2 */
@@ -1080,38 +1032,38 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         int midY = midX;
         int rightX = 2 + (2 * (midX - leftX)); /* trying to evenly space. was 19, 20 ugly, trying 22 */
         int lowY = rightX;
-        
+
         g_buffer.setColor(dicecolor);
         g_buffer.fill(new Rectangle2D.Double(x, y, diceSize, diceSize ));
         g_buffer.setColor(dotcolor);
 
         switch(roll) {
-        case 1:
+            case 1:
             g_buffer.fill(new Rectangle2D.Double(x+midX, y+midY, dotSize, dotSize));
             break;
-        case 2:
+            case 2:
             g_buffer.fill(new Rectangle2D.Double(x+leftX, y+topY, dotSize, dotSize));
             g_buffer.fill(new Rectangle2D.Double(x+rightX, y+lowY, dotSize, dotSize));
             break;
-        case 3:
+            case 3:
             g_buffer.fill(new Rectangle2D.Double(x+leftX, y+topY, dotSize, dotSize));
             g_buffer.fill(new Rectangle2D.Double(x+midX, y+midY, dotSize, dotSize));
             g_buffer.fill(new Rectangle2D.Double(x+rightX, y+lowY, dotSize, dotSize));
             break;
-        case 4:
+            case 4:
             g_buffer.fill(new Rectangle2D.Double(x+leftX, y+topY, dotSize, dotSize));
             g_buffer.fill(new Rectangle2D.Double(x+rightX, y+lowY, dotSize, dotSize));
             g_buffer.fill(new Rectangle2D.Double(x+rightX, y+topY, dotSize, dotSize));
             g_buffer.fill(new Rectangle2D.Double(x+leftX, y+lowY, dotSize, dotSize));
             break;
-        case 5:
+            case 5:
             g_buffer.fill(new Rectangle2D.Double(x+leftX, y+topY, dotSize, dotSize));
             g_buffer.fill(new Rectangle2D.Double(x+rightX, y+lowY, dotSize, dotSize));
             g_buffer.fill(new Rectangle2D.Double(x+rightX, y+topY, dotSize, dotSize));
             g_buffer.fill(new Rectangle2D.Double(x+leftX, y+lowY, dotSize, dotSize));
             g_buffer.fill(new Rectangle2D.Double(x+midX, y+midY, dotSize, dotSize));
             break;
-        case 6:
+            case 6:
             g_buffer.fill(new Rectangle2D.Double(x+leftX, y+topY, dotSize, dotSize));
             g_buffer.fill(new Rectangle2D.Double(x+rightX, y+lowY, dotSize, dotSize));
             g_buffer.fill(new Rectangle2D.Double(x+rightX, y+topY, dotSize, dotSize));
@@ -1122,25 +1074,24 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         }
     } // drawDice( )
 
-
     /**
-    * drawTriangle: Draws a triangle with the point facing downward, 
-    * x,y gives left corner coordinates and a number for color.
-    * Hooks: status, g_buffer, old_point 
-    */
+     * drawTriangle: Draws a triangle with the point facing downward, 
+     * x,y gives left corner coordinates and a number for color.
+     * Hooks: status, g_buffer, old_point 
+     */
     private void drawTriangle(int x, int y, int point_color) {
         if (point_color==1) {
             g_buffer.setColor(myBoardPict.color_point_white);
         } else {
             g_buffer.setColor(myBoardPict.color_point_black);
         }
-        
+
         int [ ] myXs = new int[3]; /* re-written in attempt to fix bluej's "cannot parse" but didn't help? */
         myXs[0] = x; myXs[1] = x + myBoardPict.POINT_WIDTH/2; myXs[2] = x + myBoardPict.POINT_WIDTH;
         int [ ] myYs = new int[] { y, y + myBoardPict.POINT_HEIGHT, y};
 
         Polygon tri = new Polygon(myXs, myYs, 3);
-        
+
         g_buffer.fillPolygon(tri);
         if (status.point_selected) {
             debug_data("TRI: Calling getPointNum",0);
@@ -1152,12 +1103,11 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         g_buffer.drawPolygon(tri);
     } // drawTriangle( )
 
-
     /**
-    * drawTriangleRev: Draws a triangle with the point facing upward,
-    * x,y gives left corner coordinates and a number for color.
-    * Hooks: status, g_buffer, old_point 
-    */
+     * drawTriangleRev: Draws a triangle with the point facing upward,
+     * x,y gives left corner coordinates and a number for color.
+     * Hooks: status, g_buffer, old_point 
+     */
     private void drawTriangleRev(int x, int y, int point_color) {
         if (point_color==neutral) {
             g_buffer.setColor(myBoardPict.color_point_white);
@@ -1180,7 +1130,6 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         g_buffer.drawPolygon(tri);
     } // drawTriangleRev
 
-
     /**
      * Draws the Game board onto the buffer
      */
@@ -1190,9 +1139,9 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
 
         // Draw the two (left & right) halves of the board
         Rectangle2D.Double halfBoardA 
-          = new Rectangle2D.Double(LEFT_MARGIN, TOP_MARGIN, BoardPict.QUADRANT_WIDTH + 2/*192*/, BoardPict.BOARD_HEIGHT/*360*/);
+        = new Rectangle2D.Double(LEFT_MARGIN, TOP_MARGIN, BoardPict.QUADRANT_WIDTH + 2/*192*/, BoardPict.BOARD_HEIGHT/*360*/);
         Rectangle2D.Double halfBoardB 
-          = new Rectangle2D.Double(LEFT_MARGIN+BoardPict.BOARD_MIDPOINT_HORIZONTAL_PIXELS/*238*/, TOP_MARGIN, BoardPict.QUADRANT_WIDTH + 2/*192*/, BoardPict.BOARD_HEIGHT/*360*/);
+        = new Rectangle2D.Double(LEFT_MARGIN+BoardPict.BOARD_MIDPOINT_HORIZONTAL_PIXELS/*238*/, TOP_MARGIN, BoardPict.QUADRANT_WIDTH + 2/*192*/, BoardPict.BOARD_HEIGHT/*360*/);
 
         g_buffer.draw(halfBoardA);
         g_buffer.fill(halfBoardA);
@@ -1202,7 +1151,7 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         // Draw the bar
         g_buffer.setColor(new Color(128,64,0)); /* brown? */
         Rectangle2D.Double bar = new Rectangle2D.Double(LEFT_MARGIN+BoardPict.QUADRANT_WIDTH + 2/*192*/, TOP_MARGIN, 
-           BoardPict.BAR_WIDTH-4/*46*/, BoardPict.BOARD_HEIGHT/*360*/);
+                BoardPict.BAR_WIDTH-4/*46*/, BoardPict.BOARD_HEIGHT/*360*/);
         g_buffer.draw(bar);
         g_buffer.fill(bar);
 
@@ -1226,7 +1175,6 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         debug_data("FINISHED THE SPIKES ",0);
     } // drawBoard( )
 
-
     private void drawBar() {
         g_buffer.setColor(new Color(100, 50, 0)); /* dark-brown? */
         int left = LEFT_MARGIN + BoardPict.barRect.x + 2 /*192*/;
@@ -1248,7 +1196,7 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
                 putString(String.valueOf(myBoard.black_bar), /*X:*/left+21, /*Y:*/topBlack + 35, Color.RED, /*fontsize:*/15);
             }
         }
-        
+
         if (myBoard.onBar(white)) {
             g_buffer.setColor(myBoardPict.clr_white);
             g_buffer.fill(new Ellipse2D.Double(left, topWhite + 5, blotSize, blotSize));
@@ -1259,13 +1207,12 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
 
     } // drawBar( )
 
-
     private void drawBlots() {
         debug_msg("drawBlots()");
-         int blotSize = BoardPict.BLOT_WIDTH; /* 29 */
+        int blotSize = BoardPict.BLOT_WIDTH; /* 29 */
 
         for (int point=1; point<=12; point++) {
-           int howManyBlots = myBoard.getHowManyBlotsOnPoint(point);
+            int howManyBlots = myBoard.getHowManyBlotsOnPoint(point);
             if ( (0<howManyBlots) && (howManyBlots<=5) ) {
                 for (int i=0; i<howManyBlots; i++) {
                     if (myBoard.getColorOnPoint(point)==white) {
@@ -1286,7 +1233,7 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
                     g_buffer.fill(new Ellipse2D.Double(findX(point), findY(point) + i*30, blotSize, blotSize));
                 }
                 putString(String.valueOf(howManyBlots)
-                   , /*X:*/findX(point)+10, /*Y:*/235, Color.RED, /*fontsize:*/15);
+                , /*X:*/findX(point)+10, /*Y:*/235, Color.RED, /*fontsize:*/15);
             }
         } // for point 1..12
 
@@ -1313,12 +1260,11 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
                 }
                 /* note: findX can return -1 if it doesn't know the point */
                 putString(String.valueOf(howManyBlots)
-                   , /*X:*/findX(point)+10, /*Y:*/255, Color.RED, /*fontsize:*/15);
+                , /*X:*/findX(point)+10, /*Y:*/255, Color.RED, /*fontsize:*/15);
             }
         } // for point 13..24
     } // drawBlots( )
-    
-    
+
     /**
      * This probably tells which point is touched by the x,y int coordinates
      */
@@ -1366,15 +1312,13 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         return i;
     } // getPointNum( )
 
-
     public void debug_data( String msg, int data) {
         /*
-            System.out.print("DEBUG: ");
-            System.out.print(msg);
-            System.out.println(data);
-        */
+        System.out.print("DEBUG: ");
+        System.out.print(msg);
+        System.out.println(data);
+         */
     } // debug_data( )
-
 
     /**
      * Set up a new game
@@ -1385,14 +1329,14 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         myBoard.myDice.reset( ); /* puts to unrolled, unused, countdown=0 */ 
         myBoard.setOldPoint( 0 );
         currentPlayer = game_unstarted; /* = white; */
-    
+
         // Reset buttons
-        FButton[btn_CancelMove].setEnabled(false);
-        FButton[btn_RollDice].setEnabled(true); /* was false, why? Was this the reason new game didn't work? */
-        FButton[btn_BearOff].setEnabled(false);
-        FButton[btn_NewGame].setEnabled(false);
-        FButton[btn_AtPotentialMove1].setVisible(false);
-        FButton[btn_AtPotentialMove2].setVisible(false);
+        fButton[btn_CancelMove].setEnabled(false);
+        fButton[btn_RollDice].setEnabled(true); /* was false, why? Was this the reason new game didn't work? */
+        fButton[btn_BearOff].setEnabled(false);
+        fButton[btn_NewGame].setEnabled(false);
+        fButton[btn_AtPotentialMove1].setVisible(false);
+        fButton[btn_AtPotentialMove2].setVisible(false);
 
         // Re-create the board
         myBoard = new Board(this);
@@ -1403,5 +1347,5 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         repaint();
     } // resetGame( )
 
- /* class Game */
+    // class Game 
 }
