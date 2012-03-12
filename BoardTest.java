@@ -208,17 +208,19 @@ public class BoardTest {
         }
 
         g.setCurrentPlayer(aiColor);
-        assertEquals(5.25, b.howImportantIsThisPoint(20, aiColor, g.myAI.getCautious( )), 
+        PointBuild pb = new PointBuild( );
+        
+        assertEquals(5.25, pb.howImportantIsThisPoint(b,20, aiColor, g.myAI.getCautious( )), 
             /*how close?*/0.01);
-        assertEquals(13006.75, b.getAllPointScore(aiColor, /*cautious*/0.5), 
+        assertEquals(13006.75, pb.getAllPointScore(b,aiColor, /*cautious*/0.5), 
             /*how close?*/0.01);
-        assertEquals(4.25, b.howImportantIsThisPoint(4, Board.white, /*cautious*/0.5), 
+        assertEquals(4.25, pb.howImportantIsThisPoint(b,4, Board.white, /*cautious*/0.5), 
             /*how close?*/0.01);
-        assertEquals(14004.25, b.getAllPointScore(Board.white, /*cautious*/0.5), 
+        assertEquals(14004.25, pb.getAllPointScore(b,Board.white, /*cautious*/0.5), 
             /*how close?*/0.01);
-        assertEquals(-997.5, b.superMegaHappyScore(/*cautious:*/g.myAI.getCautious( ), aiColor ), 
+        assertEquals(-997.5, pb.superMegaHappyScore(b,/*cautious:*/g.myAI.getCautious( ), aiColor ), 
             /*how close?*/0.01);
-        System.out.println(b.superMegaHappyScore(/*cautious:*/g.myAI.getCautious( ), aiColor ));
+        System.out.println(pb.superMegaHappyScore(b,/*cautious:*/g.myAI.getCautious( ), aiColor ));
         /* let's test a new score for another board layout...*/
     }
     
