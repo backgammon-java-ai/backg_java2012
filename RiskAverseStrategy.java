@@ -5,13 +5,13 @@
  * @author M & J & J
  * @version 2012 Mar 11
  */
-public class RiskAverse extends Strategy
+public class RiskAverseStrategy extends Strategy
 {
 
     /**
      * Constructor for objects of class RiskAverse
      */
-    public RiskAverse()
+    public RiskAverseStrategy()
     {
     }
 
@@ -21,5 +21,5 @@ public class RiskAverse extends Strategy
     Move pickBestMove(Board currentBoard, int theColor) {
         throw new IllegalArgumentException("The 'RiskAverse' Strategy doesn't work yet.");
     }
-    // class RiskAverse
-}
+
+} /* class RiskAverseStrategy */

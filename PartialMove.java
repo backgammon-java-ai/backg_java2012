@@ -81,7 +81,7 @@ public class PartialMove implements Comparable<PartialMove>
     
     
     public String toString( ) {
-        return ("[start:" + start + ", roll:" + roll + ", end:" + end + ", color:" + color+"]");
+        return ("[start:" + start +  ", end:" + end + ", roll:" + roll + ", color:" + color+"]");
     }
     
 

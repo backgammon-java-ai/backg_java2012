@@ -5,7 +5,7 @@
  * @author J^2+M
  * @version 2012 Mar 6
  */
-public class PointBuild extends Strategy
+public class PointBuildStrategy extends Strategy
 {
     // instance variables 
  //   Board currBoard = null;
@@ -18,7 +18,7 @@ public class PointBuild extends Strategy
     /**
      * Constructor for objects of class PointBuild
      */
-    public PointBuild()
+    public PointBuildStrategy()
     {
         
     }
@@ -227,4 +227,4 @@ public class PointBuild extends Strategy
  
      
      
-}
+} /* class PointBuildStrategy */

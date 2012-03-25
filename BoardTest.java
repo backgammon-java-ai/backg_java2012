@@ -208,7 +208,7 @@ public class BoardTest {
         }
 
         g.setCurrentPlayer(aiColor);
-        PointBuild pb = new PointBuild( );
+        PointBuildStrategy pb = new PointBuildStrategy( );
         
         assertEquals(5.25, pb.howImportantIsThisPoint(b,20, aiColor, g.myAI.getCautious( )), 
             /*how close?*/0.01);

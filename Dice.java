@@ -13,16 +13,16 @@ import java.util.Random;
 public class Dice
 {
     /* if you add more fields here, add them to the copy constructor, also! 
-       Beware deep copy if the new fields hold (pointers to) objects! */
+    Beware deep copy if the new fields hold (pointers to) objects! */
     private int[ ] dice = new int[howManyDice];
     /* beware! Outside world talks about getUsed(1) which refers to used[0], getUsed(2) means used[1], etc */
     private boolean[ ] used = new boolean[maxMovesCount]; /* was called "used_move". Too small for collection? */
     private int doubletMovesCountdown = 0; /* should be called howManyPartialMovesAvailable */
-    
+
     /* old code for used: usedDice == 1 means first dice has been used
-       usedDice == 2 means second dice has been used
-       usedDice == 0 means no die have been used yet
-       doubletMovesCountdown keeps a countdown of total number of moves available, from 4 when doubles.  */
+    usedDice == 2 means second dice has been used
+    usedDice == 0 means no die have been used yet
+    doubletMovesCountdown keeps a countdown of total number of moves available, from 4 when doubles.  */
 
     private boolean rolled = false;
     private Random rdice = null; // random number generator, gets started in constructor.
@@ -31,12 +31,11 @@ public class Dice
     static final int howManyDice = 2;
     static final int maxMovesCount = 4; /* Bonus for getting doubles. Would be diff with more dice. */
     static final int NO_SUCH_DIE = -9; /* if someone asks unrolled dice which one is highest roll */
-    
+
     static final int UNROLLED = 0; /* for dice in mid-air? */
     static final int minDieVal = 1;
     static final int maxDieVal = 6;
 
-    
     /**
      * Default constructor, leaves dice unrolled
      */
@@ -45,8 +44,7 @@ public class Dice
         rdice = new Random(); // random number generator
         reset( ); //turns off rolled, unrolls all dice, put usedDice & doubletMovesCountdown to 0
     }
-    
-    
+
     /**
      * Copy Constructor
      */
@@ -62,8 +60,7 @@ public class Dice
         rdice = other.rdice; /* not copying this, just linking to their generator. We don't need another, do we? */
         usedDiceHowMany = other.usedDiceHowMany;
     } /* Copy Constructor */
-    
-    
+
     
     /**
      * Constructor for objects of class Dice with only 2 dice. 
@@ -75,18 +72,18 @@ public class Dice
      * This will throw exception if one diceValue is UNROLLED while other is in rolled range!
      */
     public Dice(int newDie1, int newDie2/*, boolean newRolled*/) 
-      /* throws IllegalArgumentException, ArrayIndexOutOfBoundsException */
-      {
+    /* throws IllegalArgumentException, ArrayIndexOutOfBoundsException */
+    {
         if (! (howManyDice == 2)) {
             throw new IllegalArgumentException("Can't use the 2 dice constructor because we have " + howManyDice + " dice!");
         }
         if (! legitDiceValue( newDie1 ) ) {
             throw new IllegalArgumentException("dice1 is given bad value '" + newDie1 
-               + "' not 0 and not [" + minDieVal + ".." + maxDieVal + "]");
+                + "' not 0 and not [" + minDieVal + ".." + maxDieVal + "]");
         }
         if (! legitDiceValue( newDie2 )) {
             throw new IllegalArgumentException("dice2 is given bad value '" + newDie2 
-               + "' not 0 and not [" + minDieVal + ".." + maxDieVal + "]");
+                + "' not 0 and not [" + minDieVal + ".." + maxDieVal + "]");
         }
         if ((newDie1 != newDie2) && ((newDie1 == UNROLLED) || (newDie2 == UNROLLED))) {
             throw new IllegalArgumentException("Bad dice pair '" + newDie1 + "," + newDie2 
@@ -100,7 +97,6 @@ public class Dice
         resetUsedDice( ); /* calls        resetDoubletMovesCountdown( ); */
     } /* constructor */
 
-
     /**
      * allows UNROLLED or [minDiceVal to maxDiceVal]
      */
@@ -108,14 +104,12 @@ public class Dice
         return (((minDieVal<= dieVal) && (dieVal <= maxDieVal)) || (dieVal == UNROLLED));
     } /* hasLegitDiceValue( ) */
 
-
     /**
      * for specifying which DIE we're talking about, not the value on a face of a die!
      */
     static boolean legitDieNum(int dieNum) {
         return ((1 <= dieNum) && (dieNum <= howManyDice));
     }
-
 
     /**
      * convenience method.
@@ -125,7 +119,6 @@ public class Dice
         return dice[0];
     } 
 
-
     /**
      * convenience method
      * Note: there is a dice2, and there is no dice0
@@ -133,7 +126,6 @@ public class Dice
     public int getDie2() {
         return dice[1];
     } 
-
 
     /**
      * Dice are named "1", "2" ... up to howManyDice (there is no dice 0!)
@@ -145,8 +137,7 @@ public class Dice
         }
         return dice[whichDie - 1]; 
     } /* getDice(int ) */
-    
-    
+
     /**
      * returns the value of the highest die.
      * will be 0 (??) if dice unrolled?
@@ -165,8 +156,7 @@ public class Dice
             return lowestRoll;
         }
     } /* highestRoll( ) */
-    
-    
+
     /**
      * returns the value of the highest die.
      * will be 0 (??) if dice unrolled?
@@ -185,8 +175,7 @@ public class Dice
             return highestRoll;
         }
     } /* highestRoll( ) */
-    
-    
+
     
     /**
      * unlike highestRoll, this tells us WHICH Unused die has the highest value.
@@ -206,8 +195,7 @@ public class Dice
             return whereLowest+1; /* beware OBOB! user expects these dice to be named 1 & 2 */
         }
     } /* whichDieIsHighest( ) */
-    
-    
+
     /**
      * unlike highestRoll, this tells us WHICH Unused die has the highest value.
      */
@@ -226,8 +214,7 @@ public class Dice
             return whereHighest+1; /* beware OBOB! user expects these dice to be named 1 & 2 */
         }
     } /* whichDieIsHighest( ) */
-    
-    
+
     /**
      * This for setting a specified individual die.
      * Can't use this to set first two dice at once! Use "roll(5,6)" to do that.
@@ -237,61 +224,69 @@ public class Dice
     public void setDie( int whichDie, int newRoll ) {
         if (! legitDieNum(whichDie)) {
             throw new IllegalArgumentException("Can't set value of dice#'" 
-              + whichDie + "', we only have dice#1.." + howManyDice);
+                + whichDie + "', we only have dice#1.." + howManyDice);
         }
         if (! legitDiceValue(newRoll)) {
             throw new IllegalArgumentException("Bad dice value '" + newRoll 
-              + "', our dice only can roll values " + minDieVal + ".." + maxDieVal);
+                + "', our dice only can roll values " + minDieVal + ".." + maxDieVal);
         }
         if (dice[whichDie - 1] != newRoll) { /* okay, changing a die */
             dice[whichDie - 1] = newRoll;
             used[whichDie - 1] = false;    
-            resetDoubletMovesCountdown( );
+            resetDoubletMovesCountdown( );  // in case we've acquired doubles
             if ((! rolled) && (allDiceHaveValues())) { //changing to "rolled" status!
                 rolled = true;
-                resetUsedDice( );
+                resetUsedDice( );  // calls resetDoubletMovesCountdown( );
             } // changed rolled status
         } // changed a die
     } /* setDie( ) */
-
 
     /**
      * I don't want to have a setRolled( ) because I think this is better: 
      * this rolls all dice and sets rolled to true.
      * To invalidate the dice, use "reset( )"
      * Unfortunately, if receiving a networked roll, we need to set rolled to true, I guess.
-     * Note: there is a convenience version of this for setting two dice "roll(int,int)" 
-     * which first calls this and then sets the values.
+     * Note: there is a version of this for setting two specific dice values "roll(int,int)" 
+     * which is called by this.
      */
     public void roll( ) {
-        for (int i=0; i<howManyDice; ++i) {
-            dice[i] = rdice.nextInt(maxDieVal) + minDieVal;
+        int newDie1 = rdice.nextInt(maxDieVal) + minDieVal;
+        int newDie2 = rdice.nextInt(maxDieVal) + minDieVal;
+        roll(newDie1,newDie2); // this would have to pass array if I don't have 2 dice??
+        if (howManyDice > 2) {
+            throw new IllegalArgumentException("I don't yet know how to handle more than 2 dice.");
+//             for (int i=0; i<howManyDice; ++i) {
+//                 dice[i] = rdice.nextInt(maxDieVal) + minDieVal;
+//             }
         }
-        rolled = true;
-        resetDoubletMovesCountdown( );
-        resetUsedDice( );
-        System.out.println("I just rolled the dice and got " + this.toString( ) + "!");
+        //        System.out.println("I just rolled the dice and got " + this.toString( ) + "!");
     }
 
-
     /**
-     * changes the first two dice to specified values, is for convenience
+     * changes the (first two) dice to specified values
      */
     public void roll(int newRoll1, int newRoll2 ) {
+        if (howManyDice > 2) {
+            throw new IllegalArgumentException("I don't yet know how to handle more than 2 dice.");
+        }
         if (! legitDiceValue(newRoll1)) {
             throw new IllegalArgumentException("Bad dice value '" + newRoll1 
-               + "', our dice only can roll " + minDieVal + ".." + maxDieVal);
+                + "', our dice only can roll " + minDieVal + ".." + maxDieVal);
         }
         if (! legitDiceValue(newRoll2)) {
             throw new IllegalArgumentException("Bad dice value '" + newRoll1 
-               + "', our dice only can roll " + minDieVal + ".." + maxDieVal);
+                + "', our dice only can roll " + minDieVal + ".." + maxDieVal);
         }
-        roll( );
+        
         dice[0] = newRoll1;
         dice[1] = newRoll2;
-        System.out.println("I changed the rolled dice to " + this.toString( ) + "!");
-    } /* roll( )
+        rolled = true;
+        resetUsedDice( ); // calls resetDoubletMovesCountdown( );
 
+        System.out.println("I changed the rolled dice to " + this.toString( ) + "!");
+    } 
+
+    /* roll( )
 
     /**
      * If we want to manually set the dice values, set them all before setting "rolled" to true
@@ -315,7 +310,6 @@ public class Dice
         }
     }
 
-
     /**
      * checks for no dice are UNROLLED value
      */
@@ -328,7 +322,6 @@ public class Dice
         }
         return allDiceAreRolled;
     }
-
 
     /**
      * Supposedly, when rolled is true, all dice have values from minDiceVal..maxDiceVal.
@@ -345,7 +338,6 @@ public class Dice
         return rolled;
     }
 
-
     /**
      * gets the private "rdice" random number generator.
      * Why should anybody need it? I don't know, but I'm revealing it
@@ -355,19 +347,17 @@ public class Dice
         return rdice;
     }
 
-
     /**
      * note: if I get doubles, I'm keeping track of 4 usable dice!
      * Users are speaking in terms of die#1 and die#2 which use our private used[0] and used[1] respectively.
      * And I'm sneaking up on the idea of coding doubles as 4 (identical) dice 1..4, so allowing up to 4 here.
      */
     public boolean getUsedDie( int newUsedDie ) {
-       if ( ! ((1<= newUsedDie) && (newUsedDie <= maxMovesCount)) ) {
+        if ( ! ((1<= newUsedDie) && (newUsedDie <= maxMovesCount)) ) {
             throw new IllegalArgumentException("bad newUsedDie '" + newUsedDie + "', should be 1.." + maxMovesCount);
         }
         return used[newUsedDie-1];
     }
-
 
     /**
      * Says how many of the dice have been 'used' so far.
@@ -377,7 +367,6 @@ public class Dice
         //for (int i=0; i<maxMovesCount; ++i) { if (used[i]) { howMany++; } }
         return usedDiceHowMany;
     } /* getUsedDiceHowMany( ) */
-
 
     /**
      * 
@@ -396,20 +385,18 @@ public class Dice
             }
         }
     } /* setUsedDie( ) */
-    
 
     /**
      * Puts the dice into unrolled state without dice values, ready for new roll.
      */
-     public void reset( ) {
-         for (int i=0; i<howManyDice; ++i) {
+    public void reset( ) {
+        for (int i=0; i<howManyDice; ++i) {
             dice[i] = UNROLLED;
         }
         rolled = false;
         resetUsedDice( ); /* calls   resetDoubletMovesCountdown( ); */
     }
-    
-    
+
     /**
      * Tells all the dice that they are unused.
      * This also resetDoubletMovesCountdown( ) so don't make it in turn call us!
@@ -422,13 +409,11 @@ public class Dice
         resetDoubletMovesCountdown( );
     }
 
-    
 
     public boolean isDoubles( ) {
         return dice[0] == dice[1];
     } /* isDoubles */
-    
-    
+
     
     /**
      * restarts the countdown, so don't use this willy nilly!
@@ -436,39 +421,38 @@ public class Dice
     private void resetDoubletMovesCountdown( ) {
         if (! rolled) {
             doubletMovesCountdown = 0;
-        } else if (isDoubles( ) ) /* or rolledBonus( ) */ {
+        } else if ( isDoubles( ) ) /* or rolledBonus( ) */ {
             doubletMovesCountdown = maxMovesCount;
         } else {
             doubletMovesCountdown = howManyDice;
         }
     }
 
-    
     public void doubletCountdown( ) {
         doubletMovesCountdown--;
         if ( doubletMovesCountdown < 0 ) {
             throw new IllegalArgumentException("uh-oh: doubletMovesCountdown went negative!");
         }
     }
-    
-    
+
     /**
      * might be nice to have a simpler "doubletCountdown( )" that subtracts one
      */
     public int getDoubletMovesCountdown() {
         return doubletMovesCountdown;
     }
-    
-    
+
     public void setDoubletMovesCountdown(int newCountDown) {
+        System.err.println("hi, who is doing setDoubletMovesCountdown( )");
+        Thread.dumpStack( ); // sends it to standard error
+
         if (! (( 0 <= newCountDown) && (newCountDown <= maxMovesCount))) {
             throw new IllegalArgumentException("bad doubletMovesCountdown '" 
-               + newCountDown + "', can only be 0.." + maxMovesCount);
+                + newCountDown + "', can only be 0.." + maxMovesCount);
         }
         doubletMovesCountdown = newCountDown;
     }
-    
-    
+
     public String toString( ) {
         // StringBuffer temp = new StringBuffer("[");
         // for (int i=0; i<(howManyDice-1); ++i) { temp.append(dice[i] + ","; }
@@ -481,7 +465,8 @@ public class Dice
             }
         }
         usedSB.append("]");
-        return "[" + dice[0] + "," + dice[1] + "]" + usedSB.toString( );
+        String doubletString = "[" + doubletMovesCountdown + " doubletCountdown]";
+        return "[" + dice[0] + "," + dice[1] + "]" + usedSB.toString( ) + doubletString;
     }
-    
+
 } /* class Dice */

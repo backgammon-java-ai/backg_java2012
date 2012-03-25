@@ -5,14 +5,14 @@
  * @author M & J & J
  * @version 2012 Mar 11
  */
-public class Race extends Strategy
+public class RaceStrategy extends Strategy
 {
     
 
     /**
      * Constructor for objects of class Race
      */
-    public Race()
+    public RaceStrategy()
     {
         
     }
@@ -24,5 +24,4 @@ public class Race extends Strategy
         throw new IllegalArgumentException("The 'Race' Strategy doesn't work yet.");
     }
     
-    // class Race
-}
+} /* class RaceStrategy */

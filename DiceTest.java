@@ -155,7 +155,30 @@ public class DiceTest
         assertEquals(4, d.lowestUnusedRoll());
         assertEquals(1, d.whichUnusedDieIsLowest());
     }
+
+    @Test
+    public void doubles()
+    {
+        Dice d = new Dice(5, 5);
+        assertEquals(4, d.getDoubletMovesCountdown());
+    }
+
+    @Test
+    public void doubletCountdown()
+    {
+        Dice d = new Dice(3, 3);
+        assertEquals(true, d.isDoubles());
+        assertEquals(4, d.getDoubletMovesCountdown());
+        d.doubletCountdown();
+        assertEquals(3, d.getDoubletMovesCountdown());
+        d.doubletCountdown();
+        assertEquals(2, d.getDoubletMovesCountdown());
+        d.doubletCountdown();
+        assertEquals(1, d.getDoubletMovesCountdown());
+    }
 }
+
+
 
 
  /* class DiceTest */

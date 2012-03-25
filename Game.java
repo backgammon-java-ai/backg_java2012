@@ -35,7 +35,6 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  * A "Game" has a board, and the board has dice. 
  */
 
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -105,7 +104,6 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
     /* GUI fits in the game BOARD_HEIGHT, sitting next to board */
     static final int BOARD_PADDING = 120;
     static final int MESSAGE_HEIGHT = 80; /* only when networked */
-
 
     /**
      * Game class constructor
@@ -188,7 +186,6 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         System.out.println();*/
     } // debug_msg
 
-
     /** 
      * calls "Board.doPartialMove( )" method
      * There is a "getUsedDie( )" (in myBoard().myDice) which says which which dice have been used.
@@ -251,7 +248,6 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         //}
     } // doMove( )
 
-
     /**
      * Forfeit the current player's turn.
      * Is called by Board, so can't be private.
@@ -302,7 +298,6 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         }
         return false;
     } // checkWin( )
-
 
     /** 
      * Roll the dice for the current player.
@@ -358,7 +353,6 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
         }
         repaint();
     } /* changePlayer */
-
 
     /**
      * End the current player's turn and start the turn
@@ -446,7 +440,6 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
             repaint( );
         }
     } 
-
 
     /**
      *  Initialize the GUI
@@ -768,7 +761,6 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
      * (constructor wants boolean re networked? true/false)
      * ================================================*/
 
-
     public void actionPerformed(ActionEvent e) {
         if (e.getActionCommand().equals(ROLL_DICE)) {
             doRoll();
@@ -789,6 +781,8 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
             try {
                 myAI.thinkAndPlay( );
             } catch(Exception ex) {
+                ex.printStackTrace( System.err );
+                //StackTraceElement[] getStackTrace()
                 System.out.println("AI thinkAndPlay had exception: " + ex);
             }
         } else if (e.getActionCommand().equals(SEND_MSG)) {
@@ -960,16 +954,16 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
      * rather than directly from the board
      */
     public void drawBoardScore() {
-//         String m1, m2;
-//         m1 = "White Board Score: " + myBoard.superMegaHappyScore(myAI.getCautious( ), white );
-//         m2 = "Black Board Score: " + myBoard.superMegaHappyScore(myAI.getCautious( ), black );
-// 
-//         g_buffer.setColor(Color.BLACK);
-//         g_buffer.fill(new Rectangle2D.Double(furtherleft, bearTop + 4*textLineHeight
-//             , GUI_Dim.GUI_WIDTH, 2*textLineHeight));
-// 
-//         putString(m1, /*X:*/furtherleft, /*Y:*/bearTop + 5*textLineHeight, Color.WHITE, /*fontsize:*/12);
-//         putString(m2, /*X:*/furtherleft, /*Y:*/bearTop + 6*textLineHeight, Color.WHITE, /*fontsize:*/12);
+        //         String m1, m2;
+        //         m1 = "White Board Score: " + myBoard.superMegaHappyScore(myAI.getCautious( ), white );
+        //         m2 = "Black Board Score: " + myBoard.superMegaHappyScore(myAI.getCautious( ), black );
+        // 
+        //         g_buffer.setColor(Color.BLACK);
+        //         g_buffer.fill(new Rectangle2D.Double(furtherleft, bearTop + 4*textLineHeight
+        //             , GUI_Dim.GUI_WIDTH, 2*textLineHeight));
+        // 
+        //         putString(m1, /*X:*/furtherleft, /*Y:*/bearTop + 5*textLineHeight, Color.WHITE, /*fontsize:*/12);
+        //         putString(m2, /*X:*/furtherleft, /*Y:*/bearTop + 6*textLineHeight, Color.WHITE, /*fontsize:*/12);
     } // drawBoardScore( )
 
     /**
@@ -998,7 +992,9 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
             case game_unstarted: return "Game Unstarted";
             default: return "??";
         }
-    } /* gets nameOf( )  [currentPlayerName] */
+    } 
+
+    /* gets nameOf( )  [currentPlayerName] */
 
     private void putString(String message, int x, int y, Color c, int fontsize) {
         g_buffer.setFont(new Font("Arial", Font.BOLD, fontsize));
@@ -1366,6 +1362,5 @@ public class Game extends JFrame implements ActionListener, CommunicationAdapter
 
         repaint();
     } // resetGame( )
-
-    // class Game
+    //class Game
 }

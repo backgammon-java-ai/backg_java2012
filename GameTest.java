@@ -150,9 +150,17 @@ public class GameTest
             fail(e.toString( ));
         }
     }
-}
-
+    
+    
+    @Test
+    public void testStartGameStrategy( ) {
+        g = new Game();
+        b = g.getMyBoard();
+        assertNotNull(b);
+        b.myDice.roll(1,1);
+        //        System.out.println(ll.myList);
+    }
+    
+    
  /* class GameTest */
-
-
-
+}

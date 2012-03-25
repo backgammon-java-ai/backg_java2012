@@ -48,6 +48,7 @@ Still not sure if point 25 is being used for anything. Program dies if it doesn'
 
 
 ...Bugs
+[ ]StartGameStrategy's Chatty test isn't picking the good moves?? Or at least isn't using them?? 
 [ ]Should AI not only add up happiness about his own blots but unhappiness about where the opponent's
 blots are (which is NOT the same thing as opponent's happiness about where his blots are, which
 might also be included, and even include opponent's unhappiness of where our blots are?)
@@ -124,7 +125,11 @@ Fixed: obob in setUsed( ).
 
 
 ...High priority
-
+[ ]our startGameStrategy doesn't check that it is actually choosing possible moves: to fix this
+note that legitStartLoc doesn't check whether we have a blot on the point in question, so any
+attempt to say "if such&such move is possible" has to check LegitStartLoc AND check that we have
+a blot on the point in question.
+[ ]fix ai's switchStrategy , which now only chooses PointBuildStrategy.
 [ ]See how long it takes to create and score and rank 100 (non-default) Boards!
 [ ]The value of a board should include pip count factored in some how! Oh, it does implicitly 
 since there will be fewer protection points with a blot bumped out to the bar.
@@ -191,6 +196,9 @@ Perhaps this could also show how many steps left before finishing.
 
 
 ...History
+2012 Mar 25: doubletMoveCountdown wasn't getting adjusted when dice were
+being given explicit values, so countdown was 2 for doubles. Is fixed!
+
 2012 Feb 9: Board UI shows whose move it is! Human can't come in from bar,
 and AI has to be brought in from bar manually.
 

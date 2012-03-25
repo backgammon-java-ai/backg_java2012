@@ -20,9 +20,9 @@ import java.util.*;  // provides Collection ?
  * @version (2011 Nov 15)
  */
 public class Move /* implements Comparable<Move> */ {
-    
+
     private int myColor = Board.neutral;
-//    private final Game myGame==null; 
+    //    private final Game myGame==null; 
     private /*final*/ ArrayList<PartialMove> myPartialMoves = null;
     private Board myBoard = null; /*For comparing the quality score of moves*/
     /* private int howManyMoves = 0; redundant for moves.size()==0 and moves.isEmpty( )? silly? */
@@ -30,14 +30,13 @@ public class Move /* implements Comparable<Move> */ {
     //private int howManyBlotsAreMoving = 1; // might be 4 pieces moving with doubles!
 
     private static final int maxPartialMovesInAMove = 4; /* if we ever have more dice, might change */
-    
-    
+
     /**
      * Constructor for objects of class Move, receiving 2?? moves.
      * 0,1,2,3,4 are all possible since we might have rolled doubles and might be blocked.
      */
     public Move(ArrayList<PartialMove> theNewPartials, int myNewColor, /*Game myNewGame*/ Board myNewStarterBoard /*Final?*/)
-/*Can't be starter board because some of the partials may have happened to it already!*/
+    /*Can't be starter board because some of the partials may have happened to it already!*/
     throws BadBoardException, BadMoveException    {
         if (theNewPartials == null) {
             myPartialMoves = new ArrayList<PartialMove>( ); // empty
@@ -53,20 +52,18 @@ public class Move /* implements Comparable<Move> */ {
             throw new BadBoardException("Moves must know the board/*game*/ they belong to, can't be null");
         }
         myBoard/*Game*/ = myNewStarterBoard/*Game*/;
-        
+
         int listSize =  myPartialMoves.size( );
         if (listSize > maxPartialMovesInAMove) {
             throw new BadMoveException("Weird: I'm building a move that has " + listSize + " partial moves, more than max allowed (" + maxPartialMovesInAMove +")!");
         }
         orderMatters = checkWhetherOrderMatters( );
     } // constructor
-    
-    
+
       
     public final ArrayList<PartialMove> getMyPartials( ) {
         return myPartialMoves; /* not a clone but a pointer. Beware!!?? */
     }
-  
 
     /**
      * has to check values inside PartialMoves
@@ -91,8 +88,7 @@ public class Move /* implements Comparable<Move> */ {
         }
         return false;
     } // equals( )
-    
-    
+
     /**
      * called by equals( )
      */
@@ -102,8 +98,7 @@ public class Move /* implements Comparable<Move> */ {
         }
         return this.myPartialMoves.equals( other.myPartialMoves );
     } // hasSameValuesAs( )
-    
-    
+
     /**
      * Called by equal( ), which has already checked for null and size mismatch, but I'll check
      * them again in case I ever want to re-use this function.
@@ -132,8 +127,7 @@ public class Move /* implements Comparable<Move> */ {
         }
         return true; /* made it through all matching */
     } // hasSameValuesInDifferentOrderFrom( )
-    
-    
+
     /**
      * This is called by constructor to set a flag. Won't change, will it??
      * 
@@ -142,6 +136,8 @@ public class Move /* implements Comparable<Move> */ {
      * when one piece is making multiple moves.
      * 
      * Maybe the creator would know better whether order matters??? And could just tell us?
+     * 
+     * Or Maybe order should always matter? 
      */
     public boolean checkWhetherOrderMatters( ) {
         boolean tempOrderMatters = false;
@@ -157,11 +153,10 @@ public class Move /* implements Comparable<Move> */ {
                 return thisPathOnlyWorksInOneOrder( ); 
             }
         } /* for */
-        System.out.println( "not really testing for the possibility of order of PartialMoves mattering, FIX! ");
+       // System.out.println( "not really testing for the possibility of order of PartialMoves mattering, FIX! ");
         return false; // for now... 
     }
-    
-    
+
     /**
      * Tricky: called when we see that a blot is moving twice: detected by "checkWhetherOrderMatters"
      * which sees somebody moving from a place they haven't reached yet. Maybe the blot is moving 2
@@ -170,13 +165,14 @@ public class Move /* implements Comparable<Move> */ {
      * Board.protectedPoint(  other color ) ... if so, this method returns TRUE;
      */
     public boolean thisPathOnlyWorksInOneOrder( ) {
-        System.out.println("Move's thisPathOnlyWorksInOneOrder( ) isn't coded yet, so we don't know");
-        System.out.println("whether order of steps matters for this path.");
-       // throw new BadMoveException( " thisPathOnlyWorksInOneOrder( ) not written yet ");
+      //  System.out.println("Move's thisPathOnlyWorksInOneOrder( ) isn't coded yet, so we don't know");
+      //  System.out.println("whether order of steps matters for this path.");
+        // throw new BadMoveException( " thisPathOnlyWorksInOneOrder( ) not written yet ");
         return false;
-    } /* thisPathOnlyWorksInOneOrder( ) */
-        
-    
+    } 
+
+    /* thisPathOnlyWorksInOneOrder( ) */
+
     
     public String toString( ) {
         StringBuffer temp = new StringBuffer("[" );
@@ -187,8 +183,7 @@ public class Move /* implements Comparable<Move> */ {
         temp.append( "]");
         return temp.toString( );
     }
-    
-    
+
     public int hashCode( ) {
         // equal Moves have to have equal hashCodes!!
         int hash = 0;
@@ -198,5 +193,5 @@ public class Move /* implements Comparable<Move> */ {
         System.out.println("Move's hashCode isn't really calculating. FIX!!");
         return hash; /* how about product or sum of all hashcodes? */
     }
-     // class Move
+    // class Move
 }
