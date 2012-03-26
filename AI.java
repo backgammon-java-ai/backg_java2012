@@ -65,29 +65,21 @@ public class AI {
 
         Move aiMove = myStrategy.pickBestMove(myGame.getMyBoard( ), myColor);
 
-        /* might not have any moves! */
-        if (aiMove == null) {
+        /* might be null, might not have any moves, might be blocked! */
+        if ((aiMove == null) || (aiMove.getMyPartials( ).size( ) < 1) || (! aiMove.isPossible())) {
             myStrategy = switchStrategy( );
             aiMove = myStrategy.pickBestMove(myGame.getMyBoard( ), myColor);
             /* what if this is null?? */
-            if (aiMove == null) {
-                throw new NullPointerException("Damn, I don't know where to move.");
+            if ((aiMove == null) || (! aiMove.isPossible())) {
+                throw new NullPointerException("Darn, I don't know where to move.");
             }
         }
         //System.out.println(myMoves);
 
         System.out.println("AI will move to '" + aiMove + "'");
+        aiMove.doMove( );
 
-        for (PartialMove p : aiMove.getMyPartials()) {
-            //            myGame.myBoard.handlePoint( p.getStart( )   );
-            //            myGame.doPartialMove(p );
-            System.err.println("DoubletCountdown is '" + myGame.getMyBoard( ).getMyDice().toString( ) + "'");
-            myGame.getMyBoard( ).doPartialMove( p );
-            /* to make the move actually happen, check out Game's methods:
-            superMove( ), forfeit( ). Note: superMove( ) calls endTurn( )
-             */
-            //        }
-        }
+        
     } // thinkAndPlay()
 
     /**

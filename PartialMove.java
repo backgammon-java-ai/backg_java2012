@@ -8,23 +8,25 @@
  */
 public class PartialMove implements Comparable<PartialMove>
 {
-    // instance variables - replace the example below with your own
+    
     private final int roll;  /* keeping this for reference, but creator decides and 
     specifies end location, since bearing off sometimes allows higher roll if you
     there are no pieces that can use that full higher roll */
     private final int whichDie;  /* Game.supermove( ) wants to know which die you're using */
-    
-   /* note: start and end can be 1..Board.howManyPoints(==24) or
-        use Board static final ints W/B_BAR_LOC, 
-       W/B_BEAR_OFF and W/B_PAST_BEAR_OFF */
+
+    /* note: start and end can be 1..Board.howManyPoints(==24) or
+    use Board static final ints W/B_BAR_LOC, 
+    W/B_BEAR_OFF and W/B_PAST_BEAR_OFF */
     private  int start = Board.ILLEGAL_MOVE ;
     private  int end  = Board.ILLEGAL_MOVE; 
     private  int color = Board.neutral;
-    private  Game myGame = null; /* is this necessary? */
-    
-   // public static final int bar = 0;
-   // public static final int bear = -1; /* just a symbol: is it bad to mismatch board?? */
-    
+    /* private Game myGame = null; /* is this necessary? */
+    private Board myBoard = null; /*For comparing the quality score of moves*/
+
+
+    // public static final int bar = 0;
+    // public static final int bear = -1; /* just a symbol: is it bad to mismatch board?? */
+
     /**
      * Constructor for objects of class MoveOne
      * Note: start + roll might not equal end when bearing off
@@ -33,57 +35,81 @@ public class PartialMove implements Comparable<PartialMove>
      * to calculate end.
      * and no higher blots can use a too-high roll.
      */
-    public PartialMove(int newStart, int newRoll, int newEnd, Game newGame, int newColor, int newWhichDie) 
-      /*throws BadPartialMoveException, BadBoardException*/ {
-        if (newGame == null) {
+    public PartialMove(int newStart, int newRoll, int newEnd, /*Game newGame*/ Board newBoard, int newColor, int newWhichDie) 
+    /*throws BadPartialMoveException, BadBoardException*/ {
+        if (newBoard == null) {
             /* throw new BadBoardException*/
-            throw new NullPointerException("Moves must know the game they belong to, can't be null game");
+            throw new NullPointerException("Moves must know the board they belong to, can't be null board");
         }
-        myGame = newGame;
+        //myGame = newGame;
+        myBoard = newBoard;
         if (Board.legitStartLoc( newStart,newColor ) && Board.legitEndLoc( newEnd, newColor ) && 
-              (Dice.legitDiceValue( newRoll )) && Board.legitColor( newColor )) {
-          start = newStart;
-          roll = newRoll;
-          end = newEnd;
-          color = newColor;
-          whichDie = newWhichDie;
+        (Dice.legitDiceValue( newRoll )) && Board.legitColor( newColor )) {
+            start = newStart;
+            roll = newRoll;
+            end = newEnd;
+            color = newColor;
+            whichDie = newWhichDie;
         } else {
             String msg = "[bad PartialMove start:" + newStart + " roll:" + newRoll 
-            + " end:" + newEnd + " color:" + newColor + " whichDie:" + newWhichDie + "]";
+                + " end:" + newEnd + " color:" + newColor + " whichDie:" + newWhichDie + "]";
             throw new IllegalArgumentException/*BadPartialMoveException*/(msg);
         }
     } // constructor with values
-    
-    
+
+    /**
+     * This could be done with the click (?? "handlePoint" ?? ) maybe? but then have to unclick?
+     * 
+     * This does NOT verify that any of the dice match the "roll" (distance moved), because we
+     * might be constructing all kinds of hypothetical moves (if they do that, then we could do
+     * this) without changing the dice for each move we consider.
+     */
+    public boolean isPossible( /*Board theBoard*/ ) {
+        if ( ! Board.legitStartLoc( start, color ) ) {
+            return false;
+        }
+        if (myBoard.getHowManyBlotsOnPoint(start, color) < 1 ) {
+            return false;
+        }
+        /* start might be on bar, so using the fancy getColorOnPoint( ) */
+        if (myBoard.getColorOnPoint( start,color ) != color) {
+            return false;
+        }
+        int calculatedEnd = myBoard.endPointMovingFrom( start, roll, color);
+        if (end != calculatedEnd) {
+            return false;
+        }
+        // does legitEndLoc check color compatibility? probably just checks that it is not out of bounds
+        if (! myBoard.canLandOn(end, color)) {
+            return false;
+        }
+
+        return true;
+    }
+
     public int getStart( ) {
         return start;
     }
-    
-    
+
     public int getEnd( ) {
         return end;
     }
-    
-    
+
     public int getColor( ) {
         return color;
     }
-    
-    
+
     public int getRoll( ) {
         return roll;
     }
-    
-    
+
     public int getWhichDie( ) {
         return whichDie;
     }
-    
-    
+
     public String toString( ) {
         return ("[start:" + start +  ", end:" + end + ", roll:" + roll + ", color:" + color+"]");
     }
-    
 
     /**
      * has to check values inside PartialMoves
@@ -97,13 +123,11 @@ public class PartialMove implements Comparable<PartialMove>
         PartialMove otherPM = (PartialMove) other;
         return ((this.start==otherPM.start) && (this.roll==otherPM.roll) && (this.end==otherPM.end) && (this.color==otherPM.color) && (this.whichDie==otherPM.whichDie)); 
     } // equals( )
-    
-    
+
     public int hashCode() {
         return start + (roll*26) + (end * 6 * 26) + (whichDie * 2 * 6 * 26) + (color * 2 * 2 * 6 * 26);
     }
-    
-    
+
     /*
      * required function for implementing "Comparable"
      * returns negative integer, 0, or a positive integer depending on whether the 
@@ -138,10 +162,10 @@ public class PartialMove implements Comparable<PartialMove>
             return 1;
         } else {
             /* shouldn't get here since this implies start,roll & end are tied which
-             the first ".equals( )" should have stopped! */
-             String myMsg = "PartialMove '"+ this.toString( )+ "' isn't comparable to PartialMove '" + other.toString( ) + "'";
-             throw new ClassCastException(myMsg);
+            the first ".equals( )" should have stopped! */
+            String myMsg = "PartialMove '"+ this.toString( )+ "' isn't comparable to PartialMove '" + other.toString( ) + "'";
+            throw new ClassCastException(myMsg);
         }
     } // CompareTo
-     // class PartialMove
+    // class PartialMove
 }

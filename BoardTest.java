@@ -63,9 +63,9 @@ public class BoardTest {
 
         g.setCurrentPlayer(aiColor);
         b.myDice.roll( );
-        assertEquals(true, b.solitaryBlotOnPoint(12, aiColor));
-        assertEquals(true, b.canLandOn(12, aiColor));
-        assertEquals(true, b.canMove(aiColor));
+        assertTrue(b.solitaryBlotOnPoint(12, aiColor));
+        assertTrue(b.canLandOn(12, aiColor));
+        assertTrue( b.canMove(aiColor));
     }
     
     
@@ -88,20 +88,20 @@ public class BoardTest {
         g.setCurrentPlayer(aiColor);
         b.myDice.setDie(1,1); /* alternative syntax:b1.myDice.roll(1,2) */
         b.myDice.setDie(2,6);
-        assertEquals(true, b.solitaryBlotOnPoint(12, aiColor));
-        assertEquals(true, b.canLandOnExact(12, aiColor));
-        assertEquals(true, b.canLandOn(12, aiColor));
-        assertEquals(true, b.canMove(aiColor));
+        assertTrue( b.solitaryBlotOnPoint(12, aiColor));
+        assertTrue( b.canLandOnExact(12, aiColor));
+        assertTrue( b.canLandOn(12, aiColor));
+        assertTrue( b.canMove(aiColor));
         assertEquals(1, b.getHowManyBlotsOnPoint(12));
         b.handlePoint(12, aiColor);
         assertEquals(11, b.getPotDest(1));
         assertEquals(6, b.getPotDest(2));
         b.doPartialMove(12,11,/*whichDie:*/1,aiColor);
-        assertEquals(true, b.solitaryBlotOnPoint(11, aiColor));
+        assertTrue( b.solitaryBlotOnPoint(11, aiColor));
         b.handlePoint(11, aiColor);
         b.doPartialMove(20,14,/*whichDie:*/2,aiColor);
-        assertEquals(true, b.solitaryBlotOnPoint(11, aiColor));
-        assertEquals(true, b.solitaryBlotOnPoint(14, aiColor));
+        assertTrue( b.solitaryBlotOnPoint(11, aiColor));
+        assertTrue( b.solitaryBlotOnPoint(14, aiColor));
     }
     
     
@@ -124,17 +124,20 @@ public class BoardTest {
 
         g.setCurrentPlayer(aiColor);
         b.myDice.roll(5,6); /* alternative syntax:b1.myDice.setDie(1,5) setDie(2,6)*/
-        assertEquals(true, b.solitaryBlotOnPoint(6, aiColor));
-        assertEquals(true, b.canLandOnExact(6, aiColor));
-        assertEquals(true, b.canLandOn(6, aiColor));
-        assertEquals(true, b.canMove(aiColor));
+        assertTrue( b.solitaryBlotOnPoint(6, aiColor));
+        assertTrue( b.canLandOnExact(6, aiColor));
+        assertTrue( b.canLandOn(6, aiColor));
+        assertTrue( b.canMove(aiColor));
         assertEquals(1, b.getHowManyBlotsOnPoint(6));
         b.handlePoint(6, aiColor);
         assertEquals(1, b.getPotDest(1));
         assertEquals(Board.BLACK_BEAR_OFF_LOC, b.getPotDest(2));
-        b.doPartialMove(6,6,/*whichDie:*/2,aiColor);
-        assertEquals(false, b.solitaryBlotOnPoint(6, aiColor));
-        assertTrue(b.needsInexactRolls(aiColor));
+        // was interesting bug: moving from point 6 to 6 caused another blot to appear
+        b.doPartialMove(6,Board.BLACK_BEAR_OFF_LOC,/*whichDie:*/2,aiColor);
+        // so now the blot has beared off from 6, right?
+        
+        assertFalse(b.solitaryBlotOnPoint(6, aiColor));
+        assertTrue(b.needsInexactRolls(aiColor)); // <-- is this miscalculating??
         b.handlePoint(4, aiColor);
         b.doPartialMove(4,5,/*whichDie:*/1,aiColor);
         assertEquals(4, b.getHowManyBlotsOnPoint(4));
@@ -161,10 +164,10 @@ public class BoardTest {
 
         g.setCurrentPlayer(aiColor);
         b.myDice.roll(5,6); /* alternative syntax:b1.myDice.setDie(1,5) setDie(2,6)*/
-        assertEquals(true, b.solitaryBlotOnPoint(6, aiColor));
-        assertEquals(true, b.canLandOnExact(6, aiColor));
-        assertEquals(true, b.canLandOn(6, aiColor));
-        assertEquals(true, b.canMove(aiColor));
+        assertTrue( b.solitaryBlotOnPoint(6, aiColor));
+        assertTrue( b.canLandOnExact(6, aiColor));
+        assertTrue( b.canLandOn(6, aiColor));
+        assertTrue( b.canMove(aiColor));
         assertEquals(1, b.getHowManyBlotsOnPoint(6));
         b.handlePoint(6, aiColor);
         assertEquals(1, b.getPotDest(1));
@@ -188,7 +191,7 @@ public class BoardTest {
 
         g.setCurrentPlayer(aiColor);
         b.myDice.roll(5,6); /* alternative syntax:b1.myDice.setDie(1,5) setDie(2,6)*/
-        assertEquals(true, b.solitaryBlotOnPoint(6, aiColor));
+        assertTrue( b.solitaryBlotOnPoint(6, aiColor));
         b.takeOneBlotOffPoint(6);
         assertEquals(0, b.getHowManyBlotsOnPoint(6));
     }
@@ -233,4 +236,3 @@ public class BoardTest {
         assertFalse(Board.legitEndLoc(-3,aiColor));
     }
 } /* class BoardTest */
-

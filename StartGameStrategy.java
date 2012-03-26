@@ -239,13 +239,13 @@ public class StartGameStrategy extends Strategy
         PartialMove pm1 = null;
 
         if (dice1isLow) { // 1,2
-            pm0 = new PartialMove( startLow, lowDice, endLow, currBoard.myGame, currColor, 1);
-            //PartialMove(int newStart, int newRoll, int newEnd, Game newGame, int newColor, int newWhichDie)
-            pm1 = new PartialMove( startHigh, highDice, endHigh, currBoard.myGame, currColor, 2);
+            pm0 = new PartialMove( startLow, lowDice, endLow, currBoard, currColor, 1);
+            //PartialMove(int newStart, int newRoll, int newEnd, Board newBoard, int newColor, int newWhichDie)
+            pm1 = new PartialMove( startHigh, highDice, endHigh, currBoard, currColor, 2);
         } else { // 2,1
-            pm0 = new PartialMove( startLow, lowDice, endLow, currBoard.myGame, currColor, 2); //<--2!!
-            //PartialMove(int newStart, int newRoll, int newEnd, Game newGame, int newColor, int newWhichDie)
-            pm1 = new PartialMove( startHigh, highDice, endHigh, currBoard.myGame, currColor, 1);
+            pm0 = new PartialMove( startLow, lowDice, endLow, currBoard, currColor, 2); //<--2!!
+            //PartialMove(int newStart, int newRoll, int newEnd, Board newBoard, int newColor, int newWhichDie)
+            pm1 = new PartialMove( startHigh, highDice, endHigh, currBoard, currColor, 1);
         }
 
         ArrayList<PartialMove> theNewPartials = new ArrayList<PartialMove>( );
@@ -258,7 +258,7 @@ public class StartGameStrategy extends Strategy
         }
         try {
             bestMove = new Move(theNewPartials, currColor,currBoard );
-            //Move(ArrayList<PartialMove> theNewPartials, int myNewColor, /*Game myNewGame*/ Board myNewStarterBoard /*Final?*/)
+            //Move(ArrayList<PartialMove> theNewPartials, int myNewColor, Board myNewStarterBoard /*Final?*/)
         } catch(Exception e) {
             throw new IllegalArgumentException(e);
         }
@@ -267,6 +267,10 @@ public class StartGameStrategy extends Strategy
 
     /**
      * Only six possible doubles to deal with.
+     * Note: starting board has whites on point 1 (2 of 'em), 12 (5), 17 (3), 19 (5)
+     * blacks on points 6 (5), 8 (3), 13 (5), 24 (2)
+     * 
+     * This is rigged to only deal with black.
      */
     Move dealWithDoubles(int theRoll) {
         switch(theRoll) {
@@ -276,8 +280,8 @@ public class StartGameStrategy extends Strategy
             // for white this will be 2 from 17 to 18 and 2 from 19 to 20
             return move2And2(/*start1*/8,/*end1*/7, /*start2*/6,/*end2*/5);
 
-            case 2:
-            return move2And2(/*start1*/1,/*end1*/3, /*start2*/3,/*end2*/5);
+            case 2:  // bug? was coded with both go 1->3 and then from 3->5
+            return move2And2(/*start1*/24,/*end1*/22, /*start2*/22,/*end2*/20);
 
             case 3:
             return move2And2(/*start1*/13,/*end1*/10, /*start2*/10,/*end2*/7);
@@ -304,10 +308,10 @@ public class StartGameStrategy extends Strategy
      */
     Move move2And2(int start1, int end1, int start2, int end2) {
         Move bestMove = null;        
-        PartialMove pm0 = new PartialMove( start1, 1, end1, currBoard.myGame, currColor, 1);
-        PartialMove pm1 = new PartialMove( start1, 1, end1, currBoard.myGame, currColor, 1);
-        PartialMove pm2 = new PartialMove( start2, 1, end2, currBoard.myGame, currColor, 2);
-        PartialMove pm3 = new PartialMove( start2, 1, end2, currBoard.myGame, currColor, 2);
+        PartialMove pm0 = new PartialMove( start1, 1, end1, currBoard, currColor, 1);
+        PartialMove pm1 = new PartialMove( start1, 1, end1, currBoard, currColor, 1);
+        PartialMove pm2 = new PartialMove( start2, 1, end2, currBoard, currColor, 2);
+        PartialMove pm3 = new PartialMove( start2, 1, end2, currBoard, currColor, 2);
 
         ArrayList<PartialMove> theNewPartials = new ArrayList<PartialMove>( );
         theNewPartials.add(pm0);
@@ -315,8 +319,8 @@ public class StartGameStrategy extends Strategy
         theNewPartials.add(pm2);
         theNewPartials.add(pm3);
         try {
-            bestMove = new Move(theNewPartials, currColor,currBoard );
-            //Move(ArrayList<PartialMove> theNewPartials, int myNewColor, /*Game myNewGame*/ Board myNewStarterBoard /*Final?*/)
+            bestMove = new Move(theNewPartials, currColor, currBoard );
+            //Move(ArrayList<PartialMove> theNewPartials, int myNewColor, Board myNewStarterBoard /*Final?*/)
         } catch(Exception e) {
             throw new IllegalArgumentException(e);
         }

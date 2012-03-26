@@ -9,11 +9,16 @@ import java.util.*;  // provides Collection
 /**
  * The test class MoveTest.
  *
- * @author  (your name)
- * @version (a version number or a date)
+ * @author  Mike Roam
+ * @version 2012 Mar 25
  */
-public class MoveTest
-{
+public class MoveTest {
+
+
+    Game g;
+    Board b;
+    int aiColor = Board.black; /* playerColor */
+
     /**
      * Default constructor for test class MoveTest
      */
@@ -42,26 +47,34 @@ public class MoveTest
     }
 
     @Test
-    public void testMove()
-    {
+    public void testMove() {
         /* old test, not working anymore, maybe it needs specific board
            probably has issue with the game needing a first roll of dice
            to choose a currentPlayer */
-        Game g1 = new Game(false);
-        PartialMove pm1 = new PartialMove(3, 2, 5, g1, g1.getCurrentPlayer( ), 1);
-        PartialMove pm2 = new PartialMove(5, 3, 8, g1, g1.getCurrentPlayer( ), 2);
-        ArrayList<PartialMove> pmlist = new ArrayList<PartialMove>( );
-        pmlist.add(pm1);
-        pmlist.add(pm2);
+        g = new Game(false);
+        b = g.getMyBoard( );
+        assertNotNull(b);
         try {
-            Move move1 = new Move(pmlist, g1.getCurrentPlayer( ), g1.myBoard);
-            System.out.println("move1==" + move1.toString( ) );
-            ArrayList<PartialMove> myPartials = move1.getMyPartials( );
-            assertEquals(2, myPartials.size( ));
-        } catch (Exception e) {
-            System.err.println("uh-oh: " + e);
+            b.makeStartingBoard( );/* regular game */
+            assertNotNull(b);
+        } catch(Exception e) {
+            /* isn't there a way to test without catching exceptions? */
+            fail(e.toString( ));
         }
+
+        g.setCurrentPlayer(aiColor);
+        b.myDice.roll(1,1); /* alternative syntax:b1.myDice.roll(1,2) */
+        assertEquals(4, b.myDice.getDoubletMovesCountdown( ) );
+
+        StartGameStrategy sg = new StartGameStrategy( );
+        Move best = sg.pickBestMove(b,aiColor);
+        System.out.println(best);
+        assertTrue( best.isPossible( ) );
+        ArrayList<PartialMove> partials = best.getMyPartials();
+        assertEquals(4, partials.size( ) );
+
+        best.doMove( );
+        assertEquals(0, b.myDice.getDoubletMovesCountdown( ) );
     } /* testMove( ) */
     
 } /* Class MoveTest*/
-

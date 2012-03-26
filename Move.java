@@ -66,6 +66,31 @@ public class Move /* implements Comparable<Move> */ {
     }
 
     /**
+     * See if ANY of the partialMoves are blocked or illegal.
+     */
+    public boolean isPossible( /* Board theBoard*/ ) {
+        for (PartialMove p : this.getMyPartials()) {
+            if (! p.isPossible( ) ) {
+                return false; // suddent death, game is over
+            }
+        }
+        return true;
+    }
+    
+    public void doMove( ) {
+        for (PartialMove p : this.getMyPartials()) {
+            //            myGame.myBoard.handlePoint( p.getStart( )   );
+            //            myGame.doPartialMove(p );
+            System.err.println("DoubletCountdown is '" + /*myGame.getMyBoard( )*/myBoard.getMyDice().toString( ) + "'");
+            /*myGame.getMyBoard( )*/myBoard.doPartialMove( p );
+            /* to make the move actually happen, check out Game's methods:
+            superMove( ), forfeit( ). Note: superMove( ) calls endTurn( )
+             */
+            //        }
+        }
+    }
+    
+    /**
      * has to check values inside PartialMoves
      */
     public boolean equals(Object other)    {

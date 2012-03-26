@@ -411,7 +411,7 @@ public class Dice
 
 
     public boolean isDoubles( ) {
-        return dice[0] == dice[1];
+        return ((dice[0] == dice[1]) && (dice[0] != 0));
     } /* isDoubles */
 
     

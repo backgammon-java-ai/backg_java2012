@@ -1,5 +1,4 @@
 
-
 import static org.junit.Assert.*;
 import org.junit.After;
 import org.junit.Before;
@@ -20,7 +19,6 @@ public class DiceTest
     {
     }
 
-    
     /**
      * Sets up the test fixture.
      *
@@ -31,7 +29,6 @@ public class DiceTest
     {
     }
 
-    
     /**
      * Tears down the test fixture.
      *
@@ -42,12 +39,11 @@ public class DiceTest
     {
     }
 
-    
     @Test
     public void testConstructors()
     {
         // Default constructor:
-        
+
         Dice d5 = new Dice( );
         assertEquals(Dice.UNROLLED, d5.getDie(1));
         assertEquals(false, d5.getRolled( ));
@@ -55,7 +51,7 @@ public class DiceTest
         assertNotNull("uh-oh, random generator is null",d5.getRDice( ));
         assertEquals(0, d5.getDoubletMovesCountdown( ));
         assertEquals(false, d5.getUsedDie(1));
-        
+
         // Copy constructor
         Dice d6 = new Dice(d5);
         assertNotSame(d6,d5);
@@ -65,8 +61,7 @@ public class DiceTest
         assertNotNull("uh-oh, random generator is null",d6.getRDice( ));
         assertEquals(0, d6.getDoubletMovesCountdown( ));
         assertEquals(false, d6.getUsedDie(1));
-        
-        
+
         // constructor with all values
         Dice d1 = new Dice(1, 2);
         assertEquals(1, d1.getDie1());
@@ -75,11 +70,10 @@ public class DiceTest
         assertEquals(1, d1.getDie(1));
         assertEquals(2, d1.getDie(2));
 
-        
         Dice d2 = new Dice(Dice.UNROLLED, 0);
         assertEquals(0, d2.getDie1());
         assertEquals(0, d2.getDie2());
-        
+
         Dice d3 = null;
         try {
             d3 = new Dice(-1,1); /* out of bounds, should result in null! */
@@ -88,7 +82,7 @@ public class DiceTest
             d3 = null;
         }
         assertNull(d3);
-        
+
         try {
             d3 = new Dice(2,7); /* out of bounds, should result in null! */
         } catch (Exception e) {
@@ -96,7 +90,7 @@ public class DiceTest
             d3 = null;
         }
         assertNull(d3);
-        
+
         Dice d4 = new Dice(3,4); 
         assertEquals(3, d4.getDie(1));
         try {
@@ -106,19 +100,30 @@ public class DiceTest
             d4 = null;
         }
         assertNull(d4);
-    } /* test the constructors */
-    
+    } 
+
+    /* test the constructors */
 
     @Test
     public void DR() {
         Dice dr4 = new Dice(4, 5);
         assertEquals(4, dr4.getDie1());
         assertEquals("I set die2 to 5 in constructor",5, dr4.getDie(2 ) );
+        assertEquals(2, dr4.getDoubletMovesCountdown( ));
+        assertFalse(dr4.isDoubles( ));
+        dr4.roll(4,4);
+        assertEquals(4, dr4.getDoubletMovesCountdown( ));
+        assertTrue(dr4.isDoubles( ));
+        dr4.doubletCountdown( );
+        assertEquals(3, dr4.getDoubletMovesCountdown( ));      
     }
 
     @Test
     public void testSetDie() {
         Dice d1 = new Dice();
+        assertEquals(0, d1.getDoubletMovesCountdown( ));
+        assertFalse(d1.isDoubles( ));
+
         d1.setDie(1, 2);
         assertEquals("die1 was UNROLLED and then explicitly set to 2",2, d1.getDie(1));
         assertFalse(d1.getRolled( ));
@@ -138,7 +143,7 @@ public class DiceTest
             d3 = null;
         }
         assertNull(d3);
-   }
+    }
 
     @Test
     public void testHighestUnused()
@@ -178,8 +183,4 @@ public class DiceTest
     }
 }
 
-
-
-
- /* class DiceTest */
-
+/* class DiceTest */
