@@ -11,7 +11,8 @@ VERSION or DATE:
 when a blot is near the end but can't bear off yet.
 
 HOW TO START THIS PROJECT: 
-  In BlueJ you can instantiate "JBackgammon(false)" (boolean says whether networked or not)
+  If using Java IDE "BlueJ" (from https://bluej.org) 
+you can instantiate "JBackgammon(false)" (boolean says whether networked or not)
 or use Safari or Firefox to browse JBackgammonApplet.html (Chrome doesn't work)
 or in terminal say "java JBackgammon" in this directory. 
 Handy compile option:   javac -Xlint:unchecked JBackgammon.java
